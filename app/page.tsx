@@ -186,10 +186,10 @@ export default function LandingPage() {
         <div className="text-center md:text-left flex-1 max-w-2xl">
           <TypingText />
           <h1 
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary mb-5 md:mb-6" 
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary mb-5 md:mb-6 leading-[1.2]" 
             style={{ letterSpacing: '-0.2%', fontWeight: 600 }}
           >
-            어제 푼 문제, 오늘 설명할 수 있나요?
+            어제 푼 문제, <br/>오늘 설명할 수 있나요?
           </h1>
           <p className="text-lg sm:text-xl md:text-xl text-text-muted mb-8 md:mb-10 max-w-2xl mx-auto md:mx-0 leading-relaxed">
           CodeBuddy는
