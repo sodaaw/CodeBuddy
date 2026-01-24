@@ -12,9 +12,8 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 function formatDate(date: Date): string {
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`
+  const days = ['일', '월', '화', '수', '목', '금', '토']
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`
 }
 
 function getDifficultyColor(difficulty: 'easy' | 'medium' | 'hard'): string {
@@ -25,6 +24,17 @@ function getDifficultyColor(difficulty: 'easy' | 'medium' | 'hard'): string {
       return 'text-yellow-400'
     case 'hard':
       return 'text-red-400'
+  }
+}
+
+function getDifficultyLabel(difficulty: 'easy' | 'medium' | 'hard'): string {
+  switch (difficulty) {
+    case 'easy':
+      return '쉬움'
+    case 'medium':
+      return '보통'
+    case 'hard':
+      return '어려움'
   }
 }
 
@@ -63,8 +73,8 @@ export default function HomePage() {
       <div className="min-h-screen pb-20 md:pb-0">
         <div className="max-w-4xl mx-auto px-4 py-6 md:py-12">
           <PageHeader
-            title="Today"
-            description="Your coding practice for today"
+            title="오늘"
+            description="오늘의 코딩 연습"
             action={
               <span className="text-sm text-text-muted">{dateLabel}</span>
             }
@@ -74,11 +84,11 @@ export default function HomePage() {
             {/* Section 1: Review Due */}
             <div>
               <h2 className="text-sm font-medium text-text-secondary mb-3 uppercase tracking-wide">
-                Review due
+                복습 예정
               </h2>
               <Card>
                 {loading ? (
-                  <p className="text-text-muted text-sm">Loading...</p>
+                  <p className="text-text-muted text-sm">불러오는 중…</p>
                 ) : reviews.length > 0 ? (
                   <div className="space-y-4">
                     {reviews.slice(0, 2).map((review) => (
@@ -93,7 +103,7 @@ export default function HomePage() {
                                 {review.problemTitle}
                               </h3>
                               <Badge variant="muted" className="text-xs">
-                                Due today
+                                오늘 마감
                               </Badge>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
@@ -102,7 +112,7 @@ export default function HomePage() {
                               </span>
                               <span className="text-text-muted text-xs">•</span>
                               <span className={cn('text-xs font-medium', getDifficultyColor(review.difficulty))}>
-                                {review.difficulty}
+                                {getDifficultyLabel(review.difficulty)}
                               </span>
                               {review.tags.slice(0, 2).map((tag) => (
                                 <Badge key={tag} variant="muted" className="text-xs">
@@ -117,13 +127,13 @@ export default function HomePage() {
                     <div className="pt-2">
                       <Link href="/review">
                         <Button variant="primary" className="w-full sm:w-auto">
-                          Start review
+                          복습 시작
                         </Button>
                       </Link>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-text-muted text-sm py-2">No reviews due today</p>
+                  <p className="text-text-muted text-sm py-2">오늘 복습할 문제 없음</p>
                 )}
               </Card>
             </div>
@@ -131,11 +141,11 @@ export default function HomePage() {
             {/* Section 2: Recommended Problems */}
             <div>
               <h2 className="text-sm font-medium text-text-secondary mb-3 uppercase tracking-wide">
-                Recommended problems
+                추천 문제
               </h2>
               {loading ? (
                 <Card>
-                  <p className="text-text-muted text-sm">Loading...</p>
+                  <p className="text-text-muted text-sm">불러오는 중…</p>
                 </Card>
               ) : recommendations.length > 0 ? (
                 <div className="space-y-3">
@@ -155,7 +165,7 @@ export default function HomePage() {
                             </span>
                             <span className="text-text-muted text-xs">•</span>
                             <span className={cn('text-xs font-medium', getDifficultyColor(rec.difficulty))}>
-                              {rec.difficulty}
+                              {getDifficultyLabel(rec.difficulty)}
                             </span>
                           </div>
                           <p className="text-sm text-text-muted leading-relaxed">{rec.reason}</p>
@@ -166,7 +176,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <Card>
-                  <p className="text-text-muted text-sm py-2">No recommendations yet</p>
+                  <p className="text-text-muted text-sm py-2">아직 추천 문제 없음</p>
                 </Card>
               )}
             </div>
@@ -175,7 +185,7 @@ export default function HomePage() {
             <div className="pt-2">
               <Link href="/log">
                 <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                  Log a new problem
+                  새 문제 기록하기
                 </Button>
               </Link>
             </div>

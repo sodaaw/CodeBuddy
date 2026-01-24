@@ -8,16 +8,109 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import Link from 'next/link'
 
+const TYPING_LINES = [
+  '// explain your solution',
+  '// not just solved, understood',
+  '// review before you forget',
+] as const
+
+function TypingText() {
+  const [displayText, setDisplayText] = useState('')
+  const [currentLineIndex, setCurrentLineIndex] = useState(0)
+  const [isTyping, setIsTyping] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const currentLine = TYPING_LINES[currentLineIndex]
+    
+    if (isTyping && !isDeleting) {
+      // Typing phase
+      if (displayText.length < currentLine.length) {
+        timeoutRef.current = setTimeout(() => {
+          setDisplayText(currentLine.slice(0, displayText.length + 1))
+        }, 60 + Math.random() * 20) // 60-80ms per character
+      } else {
+        // Finished typing, pause before deleting
+        timeoutRef.current = setTimeout(() => {
+          setIsDeleting(true)
+          setIsTyping(false)
+        }, 1200 + Math.random() * 400) // 1.2-1.6s pause
+      }
+    } else if (isDeleting) {
+      // Deleting phase
+      if (displayText.length > 0) {
+        timeoutRef.current = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1))
+        }, 40 + Math.random() * 20) // Slightly faster than typing
+      } else {
+        // Finished deleting, select next random line
+        const nextIndex = Math.floor(Math.random() * TYPING_LINES.length)
+        setCurrentLineIndex(nextIndex)
+        setIsDeleting(false)
+        setIsTyping(true)
+      }
+    }
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [displayText, currentLineIndex, isTyping, isDeleting])
+
+  return (
+    <div
+      className="text-sm md:text-base mb-3 md:mb-4 text-left"
+      style={{
+        fontFamily: 'var(--font-ubuntu-mono)',
+        color: 'rgba(62, 207, 142, 0.75)', // accent green at ~75% opacity
+        minHeight: '1.5em',
+      }}
+    >
+      {displayText}
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const { isLoggedIn } = useAuth()
   const router = useRouter()
   const [showHowItWorks, setShowHowItWorks] = useState(false)
+  const [meowBubble, setMeowBubble] = useState<string | null>(null)
+  const [meowExiting, setMeowExiting] = useState(false)
   const howItWorksRef = useRef<HTMLDivElement>(null)
+  const meowFadeOutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const meowRemoveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const MEOWS = ['야옹', '미야옹', '애옹', '먀옹', '매옹'] as const
+  const FADE_MS = 250
+  const VISIBLE_MS = 1200
+
+  const clearMeowTimeouts = () => {
+    if (meowFadeOutRef.current) { clearTimeout(meowFadeOutRef.current); meowFadeOutRef.current = null }
+    if (meowRemoveRef.current) { clearTimeout(meowRemoveRef.current); meowRemoveRef.current = null }
+  }
+
+  const handleCatClick = () => {
+    clearMeowTimeouts()
+    const random = MEOWS[Math.floor(Math.random() * MEOWS.length)]
+    setMeowBubble(random)
+    setMeowExiting(false)
+    meowFadeOutRef.current = setTimeout(() => {
+      setMeowExiting(true)
+      meowFadeOutRef.current = null
+      meowRemoveRef.current = setTimeout(() => {
+        setMeowBubble(null)
+        setMeowExiting(false)
+        meowRemoveRef.current = null
+      }, FADE_MS)
+    }, VISIBLE_MS)
+  }
 
   useEffect(() => {
     if (isLoggedIn) {
       router.push('/home')
     }
+    return () => { clearMeowTimeouts() }
   }, [isLoggedIn, router])
 
   const handleHowItWorks = () => {
@@ -47,7 +140,7 @@ export default function LandingPage() {
           </div>
           <Link href="/login">
             <Button variant="ghost" size="sm">
-              Login
+              로그인
             </Button>
           </Link>
         </div>
@@ -56,20 +149,21 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="min-h-[calc(100vh-3.5rem)] max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-20 md:pb-24 flex flex-col md:flex-row md:items-center md:justify-between gap-10 md:gap-12">
         <div className="text-center md:text-left flex-1 max-w-2xl">
+          <TypingText />
           <h1 
             className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-text-primary mb-4 md:mb-6" 
             style={{ letterSpacing: '-0.2%', fontWeight: 600 }}
           >
-            Don't forget how you solved it.
+            해결한 방법을 잊지 마세요.
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-text-muted mb-6 md:mb-8 max-w-2xl mx-auto md:mx-0">
-            Remember your algorithms. A better way to prepare for coding interviews through active recall and spaced repetition.
+            풀었던 알고리즘을 기억하세요. 적극 회상과 간격 반복으로 코딩 면접을 준비하는 더 좋은 방법이에요.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
             <Link href="/login">
               <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                Get started
+                시작하기
               </Button>
             </Link>
             <Button 
@@ -78,16 +172,37 @@ export default function LandingPage() {
               className="w-full sm:w-auto"
               onClick={handleHowItWorks}
             >
-              How it works
+              사용 방법
             </Button>
           </div>
         </div>
-        <div className="flex justify-center md:justify-end flex-shrink-0">
-          <img 
-            src="/cat.png" 
-            alt="" 
-            className="w-72 sm:w-[21rem] md:w-96 lg:w-[27rem] h-auto object-contain"
-          />
+        <div className="relative flex justify-center md:justify-end flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleCatClick}
+            className="relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            aria-label="고양이"
+          >
+            <img 
+              src="/cat.png" 
+              alt="" 
+              className="w-72 sm:w-[21rem] md:w-96 lg:w-[27rem] h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            />
+            {meowBubble && (
+              <span
+                className={`absolute left-1/2 -translate-x-1/2 -top-3 flex flex-col items-center ${
+                  meowExiting
+                    ? 'animate-[meow-fade-out_250ms_ease-out_forwards]'
+                    : 'animate-[meow-fade-in_250ms_ease-out]'
+                }`}
+              >
+                <span className="relative px-3 py-1.5 rounded-xl bg-background-tertiary border border-border text-sm text-text-primary whitespace-nowrap shadow-lg">
+                  {meowBubble}
+                  <span className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-background-tertiary" />
+                </span>
+              </span>
+            )}
+          </button>
         </div>
       </section>
 
@@ -103,10 +218,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-base font-medium text-text-primary mb-1.5">
-                  Log your solved problems
+                  푼 문제 기록하기
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Track every problem you solve with detailed notes and solutions.
+                  푼 모든 문제를 메모와 풀이와 함께 꼼꼼히 기록하세요.
                 </p>
               </div>
             </div>
@@ -121,10 +236,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-base font-medium text-text-primary mb-1.5">
-                  Check your understanding
+                  이해도 확인하기
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Test yourself with spaced repetition to ensure long-term retention.
+                  간격 반복으로 스스로 테스트해 오래 기억하게 하세요.
                 </p>
               </div>
             </div>
@@ -139,10 +254,10 @@ export default function LandingPage() {
               </div>
               <div>
                 <h3 className="text-base font-medium text-text-primary mb-1.5">
-                  Review at the right time
+                  알맞은 타이밍에 복습하기
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed">
-                  Get notified when it's time to review problems you solved before.
+                  예전에 푼 문제를 복습할 때가 되면 알림을 받으세요.
                 </p>
               </div>
             </div>
@@ -160,10 +275,10 @@ export default function LandingPage() {
             className="text-2xl md:text-3xl font-semibold text-text-primary mb-3" 
             style={{ letterSpacing: '-0.2%', fontWeight: 600 }}
           >
-            How it works
+            사용 방법
           </h2>
           <p className="text-text-muted max-w-2xl mx-auto">
-            Three simple steps to master coding problems
+            코딩 문제 마스터를 위한 세 가지 단계
           </p>
         </div>
 
@@ -174,10 +289,10 @@ export default function LandingPage() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-text-primary mb-1.5">
-                Log a problem
+                1. 문제 기록하기
               </h3>
               <p className="text-sm text-text-muted leading-relaxed">
-                Solve a coding problem and record your solution with notes. Track what you learned and how you approached it.
+                코딩 문제를 풀고 메모와 함께 풀이를 기록하세요. 무엇을 배웠는지, 어떻게 접근했는지 적어두세요.
               </p>
             </div>
           </div>
@@ -188,10 +303,10 @@ export default function LandingPage() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-text-primary mb-1.5">
-                Answer AI check questions
+                2. AI 체크 질문에 답하기
               </h3>
               <p className="text-sm text-text-muted leading-relaxed">
-                Test your understanding with AI-generated questions. Verify that you truly remember the solution, not just the problem.
+                AI가 만든 질문으로 이해도를 확인하세요. 문제만 기억하는 게 아니라 풀이를 제대로 기억하는지 검증합니다.
               </p>
             </div>
           </div>
@@ -202,10 +317,10 @@ export default function LandingPage() {
             </div>
             <div>
               <h3 className="text-lg font-medium text-text-primary mb-1.5">
-                Review at the right time
+                3. 알맞은 타이밍에 복습하기
               </h3>
               <p className="text-sm text-text-muted leading-relaxed">
-                Get notified when it's time to review. Our spaced repetition algorithm ensures you review problems at optimal intervals for long-term retention.
+                복습할 때가 되면 알림을 받으세요. 간격 반복 알고리즘이 최적의 간격으로 복습해 오래 기억하도록 돕습니다.
               </p>
             </div>
           </div>
@@ -216,31 +331,31 @@ export default function LandingPage() {
       <Modal
         isOpen={showHowItWorks}
         onClose={() => setShowHowItWorks(false)}
-        title="How it works"
+        title="사용 방법"
       >
         <div className="space-y-6">
           <div>
             <h3 className="text-base font-medium text-text-primary mb-1.5">
-              1. Log a problem
+              1. 문제 기록하기
             </h3>
             <p className="text-sm text-text-muted">
-              Solve a coding problem and record your solution with notes.
+              코딩 문제를 풀고 메모와 함께 풀이를 기록하세요.
             </p>
           </div>
           <div>
             <h3 className="text-base font-medium text-text-primary mb-1.5">
-              2. Answer AI check questions
+              2. AI 체크 질문에 답하기
             </h3>
             <p className="text-sm text-text-muted">
-              Test your understanding with AI-generated questions.
+              AI가 만든 질문으로 이해도를 확인하세요.
             </p>
           </div>
           <div>
             <h3 className="text-base font-medium text-text-primary mb-1.5">
-              3. Review at the right time
+              3. 알맞은 타이밍에 복습하기
             </h3>
             <p className="text-sm text-text-muted">
-              Get notified when it's time to review for optimal retention.
+              복습할 때가 되면 알림을 받아 오래 기억하세요.
             </p>
           </div>
         </div>
