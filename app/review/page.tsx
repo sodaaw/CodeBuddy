@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
@@ -41,6 +40,20 @@ function getDifficultyColor(difficulty: 'easy' | 'medium' | 'hard'): string {
       return 'text-yellow-400'
     case 'hard':
       return 'text-red-400'
+  }
+}
+
+function getReviewContext(review: ReviewItem): string {
+  // Generate context text about why it's due
+  const daysSince = Math.floor(
+    (Date.now() - new Date(review.submittedAt).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  if (daysSince === 0) {
+    return '오늘 기록한 문제예요'
+  } else if (daysSince === 1) {
+    return '어제 기록한 문제예요'
+  } else {
+    return `${daysSince}일 전에 기록한 문제예요`
   }
 }
 
@@ -203,10 +216,15 @@ export default function ReviewPage() {
     <ProtectedRoute>
       <div className="min-h-screen pb-20 md:pb-0">
         <div className="max-w-7xl mx-auto px-4 py-6 md:py-12">
-          <PageHeader
-            title="복습"
-            description="오늘 복습이 필요한 문제들이에요"
-          />
+          {/* Header */}
+          <div className="mb-8 md:mb-10">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.02em', fontWeight: 600 }}>
+              오늘 복습, 하나만 해볼까요?
+            </h1>
+            <p className="text-sm sm:text-base text-text-muted leading-relaxed">
+              지금 복습하면 기억이 오래 남아요
+            </p>
+          </div>
 
           {isLoading ? (
             <div className="text-center py-12">
@@ -214,9 +232,11 @@ export default function ReviewPage() {
             </div>
           ) : reviews.length === 0 ? (
             <Card>
-              <p className="text-text-muted text-sm text-center py-8">
-                복습할 문제가 없어요
-              </p>
+              <div className="text-center py-12">
+                <p className="text-text-muted text-sm mb-4">
+                  복습할 문제가 없어요
+                </p>
+              </div>
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -226,19 +246,27 @@ export default function ReviewPage() {
                   <Card
                     key={review.id}
                     className={cn(
-                      'cursor-pointer transition-colors duration-150',
+                      'cursor-pointer transition-all duration-150',
                       selectedReview?.id === review.id
-                        ? 'border-accent/30 bg-background-tertiary'
-                        : 'hover:border-[rgba(255,255,255,0.1)]'
+                        ? 'border-accent/40 bg-background-tertiary'
+                        : 'hover:border-[rgba(255,255,255,0.12)] hover:bg-background-tertiary/50'
                     )}
                     onClick={() => handleReviewSelect(review)}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-medium text-text-primary mb-2">
-                          {review.problemTitle}
-                        </h3>
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-base font-medium text-text-primary">
+                            {review.problemTitle}
+                          </h3>
+                          <Badge variant="accent" className="text-xs font-medium">
+                            오늘 복습
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-text-muted mb-2">
+                          {getReviewContext(review)}
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="muted" className="text-xs">
                             {review.tags[0]}
                           </Badge>
@@ -246,14 +274,14 @@ export default function ReviewPage() {
                             {getDifficultyLabel(review.difficulty)}
                           </Badge>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="accent" className="text-xs">
-                            오늘 복습
-                          </Badge>
-                        </div>
                       </div>
                       <svg
-                        className="w-5 h-5 text-text-muted flex-shrink-0"
+                        className={cn(
+                          'w-5 h-5 flex-shrink-0 transition-colors duration-150',
+                          selectedReview?.id === review.id
+                            ? 'text-accent'
+                            : 'text-text-muted group-hover:text-text-primary'
+                        )}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -276,22 +304,23 @@ export default function ReviewPage() {
                   <div className="space-y-6">
                     <Card>
                       <div className="space-y-6">
-                        {/* Problem Summary */}
-                        <div>
-                          <h2 className="text-sm font-medium text-text-secondary mb-4 uppercase tracking-wide">
-                            문제 요약
+                        {/* Problem Title & Summary */}
+                        <div className="space-y-3">
+                          <h2 className="text-xl font-semibold text-text-primary">
+                            {selectedReview.problemTitle}
                           </h2>
-                          <p className="text-sm text-text-primary leading-relaxed">
-                            {selectedReview.summary ||
-                              '문제 요약 정보가 없습니다.'}
-                          </p>
+                          {selectedReview.summary && (
+                            <p className="text-sm text-text-muted leading-relaxed">
+                              {selectedReview.summary}
+                            </p>
+                          )}
                         </div>
 
                         {/* Review Mode Selector */}
                         <div>
-                          <h2 className="text-sm font-medium text-text-secondary mb-4 uppercase tracking-wide">
+                          <label className="block text-sm font-medium text-text-primary mb-3">
                             복습 모드
-                          </h2>
+                          </label>
                           <SegmentedToggle
                             options={REVIEW_MODES}
                             value={reviewMode}
@@ -377,9 +406,22 @@ export default function ReviewPage() {
                   </div>
                 ) : (
                   <Card>
-                    <p className="text-text-muted text-sm text-center py-12">
-                      왼쪽에서 복습할 문제를 선택하세요
-                    </p>
+                    <div className="text-center py-12 space-y-4">
+                      <p className="text-sm text-text-primary leading-relaxed">
+                        왼쪽에서 복습할 문제를 선택하면<br />
+                        여기서 복습을 시작할 수 있어요
+                      </p>
+                      {reviews.length > 0 && (
+                        <Button
+                          variant="primary"
+                          size="md"
+                          onClick={() => handleReviewSelect(reviews[0])}
+                          className="mt-2"
+                        >
+                          첫 복습 시작하기
+                        </Button>
+                      )}
+                    </div>
                   </Card>
                 )}
               </div>
@@ -397,21 +439,19 @@ export default function ReviewPage() {
             >
               <div className="space-y-6 max-h-[calc(80vh-4rem)] overflow-y-auto">
                 {/* Problem Summary */}
-                <div>
-                  <h2 className="text-sm font-medium text-text-secondary mb-4 uppercase tracking-wide">
-                    문제 요약
-                  </h2>
-                  <p className="text-sm text-text-primary leading-relaxed">
-                    {selectedReview.summary ||
-                      '문제 요약 정보가 없습니다.'}
-                  </p>
-                </div>
+                {selectedReview.summary && (
+                  <div>
+                    <p className="text-sm text-text-muted leading-relaxed">
+                      {selectedReview.summary}
+                    </p>
+                  </div>
+                )}
 
                 {/* Review Mode Selector */}
                 <div>
-                  <h2 className="text-sm font-medium text-text-secondary mb-4 uppercase tracking-wide">
+                  <label className="block text-sm font-medium text-text-primary mb-3">
                     복습 모드
-                  </h2>
+                  </label>
                   <SegmentedToggle
                     options={REVIEW_MODES}
                     value={reviewMode}

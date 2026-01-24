@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -11,6 +10,7 @@ import { SegmentedToggle } from '@/components/ui/SegmentedToggle'
 import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { Toast } from '@/components/ui/Toast'
+import { Card } from '@/components/ui/Card'
 
 const DIFFICULTY_LABELS = ['매우 쉬움', '쉬움', '보통', '어려움', '매우 어려움']
 const PROBLEM_TYPES = [
@@ -62,52 +62,61 @@ export default function LogPage() {
   return (
     <ProtectedRoute>
       <div className="min-h-screen pb-24 md:pb-0">
-        <div className="max-w-2xl mx-auto px-4 py-6 md:py-12">
-          <PageHeader
-            title="문제 기록하기"
-            description="풀이한 문제를 기록하고 관리하세요"
-          />
+        <div className="max-w-xl mx-auto px-4 py-6 md:py-12">
+          {/* Header */}
+          <div className="mb-8 md:mb-10">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.02em', fontWeight: 600 }}>
+              방금 푼 문제, 기록해두세요
+            </h1>
+            <p className="text-sm sm:text-base text-text-muted leading-relaxed">
+              지금 정리해두면 다음에 훨씬 빨리 떠올릴 수 있어요
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-10">
-            {/* 문제 정보 섹션 */}
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-5">
-                문제 정보
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* 1) Problem Identification - Compact */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  문제 링크 또는 문제 번호
+                </label>
+                <Input
+                  type="text"
+                  value={problemLink}
+                  onChange={(e) => setProblemLink(e.target.value)}
+                  placeholder="https://www.acmicpc.net/problem/2178 또는 LeetCode 200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  문제 유형
+                </label>
+                <Select
+                  value={problemType}
+                  onChange={(e) => setProblemType(e.target.value)}
+                  required
+                >
+                  <option value="">선택하세요</option>
+                  {PROBLEM_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            {/* 2) Main Section - Most Prominent Card */}
+            <Card className="space-y-6">
+              <h2 className="text-base font-medium text-text-primary">
+                이 문제, 어땠나요?
               </h2>
-              <div className="space-y-5">
+              
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    문제 링크 또는 문제 번호 입력
-                  </label>
-                  <Input
-                    type="text"
-                    value={problemLink}
-                    onChange={(e) => setProblemLink(e.target.value)}
-                    placeholder="https://www.acmicpc.net/problem/2178 또는 LeetCode 200"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    문제 유형 선택
-                  </label>
-                  <Select
-                    value={problemType}
-                    onChange={(e) => setProblemType(e.target.value)}
-                    required
-                  >
-                    <option value="">선택하세요</option>
-                    {PROBLEM_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
+                  <label className="block text-sm font-medium text-text-primary mb-3">
                     체감 난이도
                   </label>
                   <div className="space-y-3">
@@ -129,18 +138,10 @@ export default function LogPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 풀이 결과 섹션 */}
-            <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-5">
-                풀이 결과
-              </h2>
-              <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-text-primary mb-3">
-                    풀이 성공 여부
+                    풀이 결과
                   </label>
                   <SegmentedToggle
                     options={[
@@ -152,62 +153,67 @@ export default function LogPage() {
                     className="w-full"
                   />
                 </div>
+              </div>
+            </Card>
 
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    풀이 소요 시간 (분)
-                  </label>
-                  <Input
-                    type="number"
-                    value={timeSpent}
-                    onChange={(e) => setTimeSpent(e.target.value)}
-                    placeholder="예: 30"
-                    min="1"
-                    required
+            {/* 3) Supporting Info - Compact, Grouped */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  풀이 소요 시간 (분)
+                </label>
+                <Input
+                  type="number"
+                  value={timeSpent}
+                  onChange={(e) => setTimeSpent(e.target.value)}
+                  placeholder="예: 30"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={usedHint}
+                    onChange={(e) => setUsedHint(e.target.checked)}
+                    className="w-4 h-4 rounded border border-border bg-background-secondary text-accent focus:ring-1 focus:ring-accent/10 focus:ring-offset-0 cursor-pointer transition-all duration-150 ease-out checked:bg-accent checked:border-accent"
                   />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={usedHint}
-                      onChange={(e) => setUsedHint(e.target.checked)}
-                      className="w-4 h-4 rounded border border-border bg-background-secondary text-accent focus:ring-1 focus:ring-accent/10 focus:ring-offset-0 cursor-pointer transition-all duration-150 ease-out checked:bg-accent checked:border-accent"
-                    />
-                    <span className="text-sm text-text-primary">
-                      풀이 중 힌트를 사용했어요
-                    </span>
-                  </label>
-                </div>
+                  <span className="text-sm text-text-primary">
+                    풀이 중 힌트를 사용했어요
+                  </span>
+                </label>
               </div>
             </div>
 
-            {/* 메모 섹션 */}
+            {/* 4) Optional Memo */}
             <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-5">
-                메모
-              </h2>
-              <div>
-                <Textarea
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-                  placeholder="헷갈렸던 포인트나 다음에 볼 때 기억할 점"
-                  rows={4}
-                />
-              </div>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                메모 (선택)
+              </label>
+              <Textarea
+                value={memo}
+                onChange={(e) => setMemo(e.target.value)}
+                placeholder="헷갈렸던 포인트나, 다음에 다시 보면 좋을 메모&#10;(한 줄만 써도 충분해요)"
+                rows={3}
+              />
             </div>
 
             {/* Submit Button - Sticky on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-10 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto border-t border-border bg-background/95 backdrop-blur-sm md:border-0 md:bg-transparent md:backdrop-blur-none p-4 md:p-0 md:pt-6">
+            <div className="fixed bottom-0 left-0 right-0 z-10 md:relative md:bottom-auto md:left-auto md:right-auto md:z-auto border-t border-border bg-background/95 backdrop-blur-sm md:border-0 md:bg-transparent md:backdrop-blur-none p-4 md:p-0 md:pt-4">
               <Button
                 type="submit"
                 variant="primary"
                 size="lg"
-                className="w-full md:w-auto"
+                className="w-full md:w-auto rounded-[12px] transition-all duration-200 ease-out hover:shadow-[0_0_0_1px_rgba(53,192,130,0.25),0_0_20px_rgba(53,192,130,0.15)]"
+                style={{
+                  backgroundColor: '#2fb87a',
+                  color: '#ffffff',
+                }}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? '저장 중...' : '문제 기록 저장하기'}
+                {isSubmitting ? '저장 중...' : '기록 완료하고 체크하기 →'}
               </Button>
             </div>
           </form>

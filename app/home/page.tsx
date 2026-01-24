@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -72,25 +71,37 @@ export default function HomePage() {
     <ProtectedRoute>
       <div className="min-h-screen pb-20 md:pb-0">
         <div className="max-w-4xl mx-auto px-4 py-6 md:py-12">
-          <PageHeader
-            title="오늘"
-            description="오늘의 코딩 연습"
-            action={
-              <span className="text-sm text-text-muted">{dateLabel}</span>
-            }
-          />
+          {/* TOP SECTION - Action-oriented headline */}
+          <div className="mb-12 md:mb-16">
+            <div className="mb-4">
+              <h1 
+                className="text-3xl sm:text-4xl md:text-5xl font-semibold text-text-primary mb-4"
+                style={{ letterSpacing: '-0.02em', fontWeight: 600 }}
+              >
+                지금 복습할 시간이에요
+              </h1>
+              <p className="text-base sm:text-lg text-text-muted leading-relaxed">
+                기억을 오래 남기는 복습이 준비되어 있어요
+              </p>
+            </div>
+            <div className="mt-6">
+              <span className="text-xs text-text-muted">{dateLabel}</span>
+            </div>
+          </div>
 
-          <div className="space-y-6">
-            {/* Section 1: Review Due */}
+          <div className="space-y-10">
+            {/* Section 1: Review Due - PRIMARY ACTION */}
             <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-3 uppercase tracking-wide">
-                복습 예정
-              </h2>
-              <Card>
+              <div className="mb-4">
+                <span className="text-xs font-medium text-text-secondary uppercase tracking-wide">
+                  오늘의 핵심
+                </span>
+              </div>
+              <Card className="space-y-5">
                 {loading ? (
                   <p className="text-text-muted text-sm">불러오는 중…</p>
                 ) : reviews.length > 0 ? (
-                  <div className="space-y-4">
+                  <>
                     {reviews.slice(0, 2).map((review) => (
                       <div
                         key={review.id}
@@ -126,21 +137,21 @@ export default function HomePage() {
                     ))}
                     <div className="pt-2">
                       <Link href="/review">
-                        <Button variant="primary" className="w-full sm:w-auto">
-                          복습 시작
+                        <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                          지금 복습하기
                         </Button>
                       </Link>
                     </div>
-                  </div>
+                  </>
                 ) : (
                   <p className="text-text-muted text-sm py-2">오늘 복습할 문제 없음</p>
                 )}
               </Card>
             </div>
 
-            {/* Section 2: Recommended Problems */}
+            {/* Section 2: Recommended Problems - SECONDARY */}
             <div>
-              <h2 className="text-sm font-medium text-text-secondary mb-3 uppercase tracking-wide">
+              <h2 className="text-xs font-medium text-text-secondary mb-3 uppercase tracking-wide">
                 추천 문제
               </h2>
               {loading ? (
@@ -148,7 +159,7 @@ export default function HomePage() {
                   <p className="text-text-muted text-sm">불러오는 중…</p>
                 </Card>
               ) : recommendations.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {recommendations.slice(0, 3).map((rec) => (
                     <Card 
                       key={rec.id} 
@@ -156,10 +167,10 @@ export default function HomePage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-text-primary mb-2">
+                          <h3 className="text-sm font-medium text-text-primary mb-1.5">
                             {rec.title}
                           </h3>
-                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
                             <span className={cn('text-xs font-medium', getPlatformColor(rec.platform))}>
                               {rec.platform}
                             </span>
@@ -168,7 +179,7 @@ export default function HomePage() {
                               {getDifficultyLabel(rec.difficulty)}
                             </span>
                           </div>
-                          <p className="text-sm text-text-muted leading-relaxed">{rec.reason}</p>
+                          <p className="text-xs text-text-muted leading-relaxed">{rec.reason}</p>
                         </div>
                       </div>
                     </Card>
