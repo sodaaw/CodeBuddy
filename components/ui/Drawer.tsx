@@ -41,7 +41,7 @@ export const Drawer: React.FC<DrawerProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50"
+      className={cn('fixed inset-0 z-50', className)}
       onClick={onClose}
     >
       <div
@@ -51,8 +51,7 @@ export const Drawer: React.FC<DrawerProps> = ({
       <div
         className={cn(
           'absolute z-10 rounded-t-lg border-t border-border bg-background-secondary',
-          sideClasses[side],
-          className
+          sideClasses[side]
         )}
         onClick={(e) => e.stopPropagation()}
       >

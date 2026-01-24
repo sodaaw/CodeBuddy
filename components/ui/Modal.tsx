@@ -42,7 +42,7 @@ export const Modal: React.FC<ModalProps> = ({
       />
       <div
         className={cn(
-          'relative z-10 w-full max-w-md rounded-lg border border-border bg-background-secondary p-6 shadow-lg',
+          'relative z-10 w-full max-w-md rounded-[10px] border border-border bg-background-secondary p-6',
           className
         )}
         onClick={(e) => e.stopPropagation()}

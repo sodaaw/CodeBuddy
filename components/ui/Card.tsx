@@ -9,7 +9,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'outlined', children, ...props }, ref) => {
     const variants = {
       default: 'bg-background-secondary',
-      outlined: 'bg-background-secondary border border-border',
+      outlined: 'bg-background-secondary border border-[rgba(255,255,255,0.06)]',
     }
 
     return (
