@@ -84,7 +84,7 @@ export default function LogPage() {
                   type="text"
                   value={problemLink}
                   onChange={(e) => setProblemLink(e.target.value)}
-                  placeholder="https://www.acmicpc.net/problem/2178 또는 LeetCode 200"
+                  placeholder="백준 2178 또는 LeetCode Two Sum"
                   required
                 />
               </div>

@@ -24,10 +24,10 @@ const DUMMY_PROBLEMS: Problem[] = [
   {
     id: 'dummy-2',
     title: 'Binary Search',
-    platform: 'LeetCode',
+    platform: 'BOJ',
     difficulty: 'Easy',
     tags: ['Array', 'Binary Search'],
-    url: 'https://leetcode.com/problems/binary-search/',
+    url: 'https://www.acmicpc.net/problem/1920',
   },
   {
     id: 'dummy-3',
@@ -48,18 +48,18 @@ const DUMMY_PROBLEMS: Problem[] = [
   {
     id: 'dummy-5',
     title: 'Maximum Subarray',
-    platform: 'LeetCode',
+    platform: 'BOJ',
     difficulty: 'Medium',
     tags: ['Array', 'Divide and Conquer', 'DP'],
-    url: 'https://leetcode.com/problems/maximum-subarray/',
+    url: 'https://www.acmicpc.net/problem/1912',
   },
   {
     id: 'dummy-6',
-    title: 'Climbing Stairs',
-    platform: 'LeetCode',
+    title: '계단 오르기',
+    platform: 'BOJ',
     difficulty: 'Easy',
     tags: ['Math', 'DP', 'Memoization'],
-    url: 'https://leetcode.com/problems/climbing-stairs/',
+    url: 'https://www.acmicpc.net/problem/2579',
   },
   {
     id: 'dummy-7',
@@ -72,10 +72,10 @@ const DUMMY_PROBLEMS: Problem[] = [
   {
     id: 'dummy-8',
     title: 'Valid Anagram',
-    platform: 'LeetCode',
+    platform: 'BOJ',
     difficulty: 'Easy',
     tags: ['Hash Table', 'String', 'Sorting'],
-    url: 'https://leetcode.com/problems/valid-anagram/',
+    url: 'https://www.acmicpc.net/problem/6996',
   },
 ]
 
@@ -196,44 +196,30 @@ export default function StartPage() {
                       미리보기
                     </span>
                   </div>
-                  <Card variant="outlined" className="space-y-3">
-                    <div>
-                      <h3 className="text-base font-medium text-text-primary mb-2">
-                        {previewProblem.title}
-                      </h3>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={cn('text-xs font-medium', getPlatformColor(previewProblem.platform))}>
-                          {previewProblem.platform}
-                        </span>
-                        <span className="text-text-muted text-xs">•</span>
-                        <span className={cn('text-xs font-medium', getDifficultyColor(previewProblem.difficulty))}>
-                          {previewProblem.difficulty}
-                        </span>
-                      </div>
-                      {previewProblem.url && (
-                        <div className="mt-2">
-                          <a
-                            href={previewProblem.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1.5 transition-colors"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            {previewProblem.url}
-                          </a>
+                  <Card variant="outlined" className="p-0 overflow-hidden">
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-text-primary mb-1.5 truncate">
+                          {previewProblem.title}
+                        </h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={cn('text-xs font-medium', getPlatformColor(previewProblem.platform))}>
+                            {previewProblem.platform}
+                          </span>
+                          <span className="text-text-muted text-xs">•</span>
+                          <span className={cn('text-xs font-medium', getDifficultyColor(previewProblem.difficulty))}>
+                            {previewProblem.difficulty}
+                          </span>
                         </div>
-                      )}
+                      </div>
+                      <Button
+                        variant="secondary"
+                        className="h-[36px] px-4 text-[13px] rounded-[8px] border-[rgba(255,255,255,0.06)] bg-background-tertiary hover:bg-accent hover:border-accent hover:text-white transition-all duration-200"
+                        onClick={() => handleStartSession(previewProblem)}
+                      >
+                        시작
+                      </Button>
                     </div>
-                    <Button
-                      variant="primary"
-                      size="md"
-                      className="w-full"
-                      onClick={() => handleStartSession(previewProblem)}
-                    >
-                      세션 시작하기
-                    </Button>
                   </Card>
                 </div>
               )}
@@ -251,14 +237,14 @@ export default function StartPage() {
               {DUMMY_PROBLEMS.map((problem) => (
                 <Card
                   key={problem.id}
-                  className="hover:border-[rgba(255,255,255,0.1)] transition-colors duration-150"
+                  className="hover:border-[rgba(255,255,255,0.1)] transition-colors duration-150 p-4 flex flex-col justify-between min-h-[140px]"
                 >
                   <div className="space-y-3">
                     <div>
                       <h3 className="text-sm font-medium text-text-primary mb-2">
                         {problem.title}
                       </h3>
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
                         <span className={cn('text-xs font-medium', getPlatformColor(problem.platform))}>
                           {problem.platform}
                         </span>
@@ -269,34 +255,20 @@ export default function StartPage() {
                       </div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {problem.tags.map((tag) => (
-                          <Badge key={tag} variant="muted" className="text-xs">
+                          <Badge key={tag} variant="muted" className="text-[10px] py-0 px-1.5 h-4">
                             {tag}
                           </Badge>
                         ))}
                       </div>
-                      {problem.url && (
-                        <div className="mt-2">
-                          <a
-                            href={problem.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-text-muted hover:text-text-secondary inline-flex items-center gap-1.5 transition-colors"
-                          >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                            문제 보기
-                          </a>
-                        </div>
-                      )}
                     </div>
+                  </div>
+                  <div className="flex justify-end mt-4">
                     <Button
-                      variant="primary"
-                      size="md"
-                      className="w-full"
+                      variant="secondary"
+                      className="h-[34px] px-3.5 text-[13px] rounded-[8px] border-[rgba(255,255,255,0.06)] bg-background-tertiary hover:bg-accent hover:border-accent hover:text-white transition-all duration-200 shadow-none"
                       onClick={() => handleStartSession(problem)}
                     >
-                      세션 시작하기
+                      시작
                     </Button>
                   </div>
                 </Card>

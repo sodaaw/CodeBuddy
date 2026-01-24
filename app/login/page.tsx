@@ -35,7 +35,7 @@ export default function LoginPage() {
           <p className="text-sm text-text-muted">
             {isSignUp
               ? '코딩 연습 여정을 시작하세요'
-              : '대시보드로 계속하려면 로그인하세요'}
+              : '(개발중)이메일/비번 아무거나 치면 로그인 가능'}
           </p>
         </div>
 
