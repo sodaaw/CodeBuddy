@@ -1,43 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
-import { getToday, getReviews } from '@/lib/api'
-import type { Recommendation, ReviewItem } from '@/lib/mock/data'
+import { useSessionStore } from '@/lib/store/sessionStore'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
-function formatDate(date: Date): string {
-  const days = ['일', '월', '화', '수', '목', '금', '토']
-  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`
-}
-
-function getDifficultyColor(difficulty: 'easy' | 'medium' | 'hard'): string {
-  switch (difficulty) {
-    case 'easy':
-      return 'text-green-400'
-    case 'medium':
-      return 'text-yellow-400'
-    case 'hard':
-      return 'text-red-400'
-  }
-}
-
-function getDifficultyLabel(difficulty: 'easy' | 'medium' | 'hard'): string {
-  switch (difficulty) {
-    case 'easy':
-      return '쉬움'
-    case 'medium':
-      return '보통'
-    case 'hard':
-      return '어려움'
-  }
-}
-
-function getPlatformColor(platform: 'BOJ' | 'LeetCode' | 'Programmers'): string {
+function getPlatformColor(platform: string): string {
   switch (platform) {
     case 'BOJ':
       return 'text-blue-400'
@@ -45,162 +17,132 @@ function getPlatformColor(platform: 'BOJ' | 'LeetCode' | 'Programmers'): string 
       return 'text-orange-400'
     case 'Programmers':
       return 'text-purple-400'
+    default:
+      return 'text-text-muted'
   }
 }
 
+function getDifficultyColor(difficulty: string): string {
+  const lower = difficulty.toLowerCase()
+  if (lower === 'easy') return 'text-green-400'
+  if (lower === 'medium') return 'text-yellow-400'
+  if (lower === 'hard') return 'text-red-400'
+  return 'text-text-muted'
+}
+
 export default function HomePage() {
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
-  const [reviews, setReviews] = useState<ReviewItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const { getDueReviews, getUnfinishedSessions } = useSessionStore()
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true)
-      const [recs, revs] = await Promise.all([getToday(), getReviews()])
-      setRecommendations(recs)
-      setReviews(revs)
-      setLoading(false)
+  const dueReviews = useMemo(() => getDueReviews(), [getDueReviews])
+  const unfinishedSessions = useMemo(() => getUnfinishedSessions(), [getUnfinishedSessions])
+
+  // Determine primary action
+  const primaryAction = useMemo(() => {
+    if (dueReviews.length > 0) {
+      return {
+        type: 'review' as const,
+        title: '지금 복습할 시간이에요',
+        cta: '지금 복습하기',
+        href: '/review',
+        session: dueReviews[0],
+      }
     }
-    loadData()
-  }, [])
-
-  const today = new Date()
-  const dateLabel = formatDate(today)
+    if (unfinishedSessions.length > 0) {
+      const session = unfinishedSessions[0]
+      const isSubmitted = session.status === 'SUBMITTED'
+      return {
+        type: 'continue' as const,
+        title: '이어서 마무리해요',
+        cta: '이어서 하기',
+        href: isSubmitted ? `/check/${session.id}` : `/solve/${session.id}`,
+        session,
+      }
+    }
+    return {
+      type: 'start' as const,
+      title: '오늘은 세션 하나만 열자',
+      cta: '세션 시작하기',
+      href: '/start',
+      session: null,
+    }
+  }, [dueReviews, unfinishedSessions])
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen pb-20 md:pb-0">
         <div className="max-w-4xl mx-auto px-4 py-6 md:py-12">
-          {/* TOP SECTION - Action-oriented headline */}
-          <div className="mb-12 md:mb-16">
-            <div className="mb-4">
-              <h1 
-                className="text-3xl sm:text-4xl md:text-5xl font-semibold text-text-primary mb-4"
-                style={{ letterSpacing: '-0.02em', fontWeight: 600 }}
-              >
-                지금 복습할 시간이에요
-              </h1>
-              <p className="text-base sm:text-lg text-text-muted leading-relaxed">
-                기억을 오래 남기는 복습이 준비되어 있어요
-              </p>
-            </div>
-            <div className="mt-6">
-              <span className="text-xs text-text-muted">{dateLabel}</span>
-            </div>
+          {/* Today Focus - PRIMARY ACTION */}
+          <div className="mb-10 md:mb-12">
+            <Card className="space-y-5">
+              <div>
+                <h1 
+                  className="text-2xl sm:text-3xl md:text-4xl font-semibold text-text-primary mb-2"
+                  style={{ letterSpacing: '-0.02em', fontWeight: 600 }}
+                >
+                  {primaryAction.title}
+                </h1>
+                {primaryAction.session && (
+                  <div className="mt-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-base font-medium text-text-primary">
+                            {primaryAction.session.problem.title}
+                          </h3>
+                          {primaryAction.type === 'review' && (
+                            <Badge variant="muted" className="text-xs">
+                              복습 예정
+                            </Badge>
+                          )}
+                          {primaryAction.type === 'continue' && (
+                            <Badge variant="muted" className="text-xs">
+                              진행 중
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={cn('text-xs font-medium', getPlatformColor(primaryAction.session.problem.platform))}>
+                            {primaryAction.session.problem.platform}
+                          </span>
+                          <span className="text-text-muted text-xs">•</span>
+                          <span className={cn('text-xs font-medium', getDifficultyColor(primaryAction.session.problem.difficulty))}>
+                            {primaryAction.session.problem.difficulty}
+                          </span>
+                          {primaryAction.session.problem.tags.slice(0, 2).map((tag) => (
+                            <Badge key={tag} variant="muted" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="pt-2">
+                  <Link href={primaryAction.href}>
+                    <Button variant="primary" size="lg" className="w-full sm:w-auto">
+                      {primaryAction.cta}
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </Card>
           </div>
 
-          <div className="space-y-10">
-            {/* Section 1: Review Due - PRIMARY ACTION */}
-            <div>
-              <div className="mb-4">
-                <span className="text-xs font-medium text-text-secondary uppercase tracking-wide">
-                  오늘의 핵심
-                </span>
-              </div>
-              <Card className="space-y-5">
-                {loading ? (
-                  <p className="text-text-muted text-sm">불러오는 중…</p>
-                ) : reviews.length > 0 ? (
-                  <>
-                    {reviews.slice(0, 2).map((review) => (
-                      <div
-                        key={review.id}
-                        className="pb-4 last:pb-0 border-b border-[rgba(255,255,255,0.06)] last:border-0"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-base font-medium text-text-primary">
-                                {review.problemTitle}
-                              </h3>
-                              <Badge variant="muted" className="text-xs">
-                                오늘 마감
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={cn('text-xs font-medium', getPlatformColor(review.platform))}>
-                                {review.platform}
-                              </span>
-                              <span className="text-text-muted text-xs">•</span>
-                              <span className={cn('text-xs font-medium', getDifficultyColor(review.difficulty))}>
-                                {getDifficultyLabel(review.difficulty)}
-                              </span>
-                              {review.tags.slice(0, 2).map((tag) => (
-                                <Badge key={tag} variant="muted" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pt-2">
-                      <Link href="/review">
-                        <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                          지금 복습하기
-                        </Button>
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-text-muted text-sm py-2">오늘 복습할 문제 없음</p>
-                )}
-              </Card>
-            </div>
-
-            {/* Section 2: Recommended Problems - SECONDARY */}
-            <div>
-              <h2 className="text-xs font-medium text-text-secondary mb-3 uppercase tracking-wide">
-                추천 문제
-              </h2>
-              {loading ? (
-                <Card>
-                  <p className="text-text-muted text-sm">불러오는 중…</p>
-                </Card>
-              ) : recommendations.length > 0 ? (
-                <div className="space-y-2.5">
-                  {recommendations.slice(0, 3).map((rec) => (
-                    <Card 
-                      key={rec.id} 
-                      className="hover:border-[rgba(255,255,255,0.1)] transition-colors duration-150 cursor-default"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium text-text-primary mb-1.5">
-                            {rec.title}
-                          </h3>
-                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                            <span className={cn('text-xs font-medium', getPlatformColor(rec.platform))}>
-                              {rec.platform}
-                            </span>
-                            <span className="text-text-muted text-xs">•</span>
-                            <span className={cn('text-xs font-medium', getDifficultyColor(rec.difficulty))}>
-                              {getDifficultyLabel(rec.difficulty)}
-                            </span>
-                          </div>
-                          <p className="text-xs text-text-muted leading-relaxed">{rec.reason}</p>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <p className="text-text-muted text-sm py-2">아직 추천 문제 없음</p>
-                </Card>
-              )}
-            </div>
-
-            {/* Section 3: Primary Action */}
-            <div className="pt-2">
-              <Link href="/log">
-                <Button variant="primary" size="lg" className="w-full sm:w-auto">
-                  새 문제 기록하기
-                </Button>
+          {/* Secondary: Start a session link (only when not the primary action) */}
+          {primaryAction.type !== 'start' && (
+            <div className="mb-8">
+              <Link 
+                href="/start"
+                className="text-sm text-text-secondary hover:text-text-primary transition-colors duration-150 inline-flex items-center gap-1.5"
+              >
+                세션 시작하기
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </ProtectedRoute>

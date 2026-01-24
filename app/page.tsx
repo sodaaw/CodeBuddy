@@ -8,6 +8,73 @@ import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
 import Link from 'next/link'
 
+const TYPING_LINES = [
+  '// explain your solution',
+  '// not just solved, understood',
+  '// review before you forget',
+] as const
+
+function TypingText() {
+  const [displayText, setDisplayText] = useState('')
+  const [currentLineIndex, setCurrentLineIndex] = useState(0)
+  const [isTyping, setIsTyping] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const currentLine = TYPING_LINES[currentLineIndex]
+    
+    if (isTyping && !isDeleting) {
+      // Typing phase
+      if (displayText.length < currentLine.length) {
+        const typingSpeed = 60 + Math.random() * 20 // 60-80ms
+        timeoutRef.current = setTimeout(() => {
+          setDisplayText(currentLine.slice(0, displayText.length + 1))
+        }, typingSpeed)
+      } else {
+        // Finished typing, pause before deleting
+        const pauseTime = 1200 + Math.random() * 400 // 1.2-1.6s
+        timeoutRef.current = setTimeout(() => {
+          setIsDeleting(true)
+        }, pauseTime)
+      }
+    } else if (isDeleting) {
+      // Deleting phase
+      if (displayText.length > 0) {
+        const deleteSpeed = 40 + Math.random() * 15 // 40-55ms (faster than typing)
+        timeoutRef.current = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1))
+        }, deleteSpeed)
+      } else {
+        // Finished deleting, randomly select next line
+        setIsDeleting(false)
+        const availableIndices = TYPING_LINES.map((_, idx) => idx).filter(idx => idx !== currentLineIndex)
+        const nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)]
+        setCurrentLineIndex(nextIndex)
+        setIsTyping(true)
+      }
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [displayText, currentLineIndex, isTyping, isDeleting])
+
+  return (
+    <div 
+      className="text-sm font-mono mb-3 md:mb-4"
+      style={{
+        color: 'rgba(62, 207, 142, 0.75)', // accent green at ~75% opacity
+        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+      }}
+    >
+      {displayText}
+    </div>
+  )
+}
+
 export default function LandingPage() {
   const { isLoggedIn } = useAuth()
   const router = useRouter()
@@ -117,6 +184,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="min-h-[calc(100vh-3.5rem)] max-w-6xl mx-auto px-4 pt-16 md:pt-24 pb-20 md:pb-24 flex flex-col md:flex-row md:items-center md:justify-between gap-10 md:gap-12">
         <div className="text-center md:text-left flex-1 max-w-2xl">
+          <TypingText />
           <h1 
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold text-text-primary mb-5 md:mb-6" 
             style={{ letterSpacing: '-0.2%', fontWeight: 600 }}
