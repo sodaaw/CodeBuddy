@@ -31,9 +31,11 @@ const LEVELS: { value: UnderstandingLevel; label: string; schedule: string }[] =
 
 function getVerdictLabel(verdict: JudgeResult['verdict']): string {
   switch (verdict) {
-    case 'LIKELY_PASS': return 'Likely pass'
-    case 'POSSIBLY_FAIL': return 'Possible issues'
-    case 'TLE_RISK': return 'TLE risk'
+    case 'PASS': return '통과'
+    case 'LIKELY_PASS': return '통과 가능'
+    case 'FAIL': return '실패'
+    case 'POSSIBLY_FAIL': return '실패 가능'
+    case 'TLE_RISK': return '시간 초과 위험'
     default: return String(verdict)
   }
 }
@@ -139,7 +141,7 @@ export default function CheckPage({ params }: CheckPageProps) {
               </p>
               <Link href="/start">
                 <Button variant="primary" size="lg" className="w-full">
-                  Start a session
+                  세션 시작하기
                 </Button>
               </Link>
             </Card>
@@ -160,18 +162,19 @@ export default function CheckPage({ params }: CheckPageProps) {
             />
             <Card className="space-y-6">
               <p className="text-base text-text-primary">
-                Review scheduled for{' '}
+                다음 복습은{' '}
                 <span className="font-medium text-accent">{formatReviewDate(reviewAt)}</span>
+                에 예정되었습니다.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link href="/review" className="flex-1 sm:flex-none">
                   <Button variant="primary" size="lg" className="w-full">
-                    Go to Review
+                    복습하러 가기
                   </Button>
                 </Link>
                 <Link href="/home" className="flex-1 sm:flex-none">
                   <Button variant="secondary" size="lg" className="w-full">
-                    Back to Home
+                    홈으로 돌아가기
                   </Button>
                 </Link>
               </div>
@@ -180,7 +183,7 @@ export default function CheckPage({ params }: CheckPageProps) {
                 onClick={handleEditAnswers}
                 className="text-sm text-text-muted hover:text-accent transition-colors"
               >
-                Edit answers
+                답변 수정하기
               </button>
             </Card>
           </div>
@@ -227,7 +230,7 @@ export default function CheckPage({ params }: CheckPageProps) {
             </div>
             {session.judge ? (
               <p className="text-xs text-text-muted">
-                Last judge estimate:{' '}
+                마지막 판정 결과:{' '}
                 <span className="text-text-secondary">
                   {getVerdictLabel(session.judge.verdict)}
                   {session.judge.confidence != null && (
@@ -237,7 +240,7 @@ export default function CheckPage({ params }: CheckPageProps) {
               </p>
             ) : (
               <p className="text-xs text-text-muted">
-                No submission yet — answer based on your current understanding.
+                아직 제출하지 않았습니다 — 현재 이해도를 바탕으로 답변해주세요.
               </p>
             )}
           </Card>
@@ -314,7 +317,7 @@ export default function CheckPage({ params }: CheckPageProps) {
                     <Toggle
                       checked={fullPlus14}
                       onChange={(e) => setFullPlus14(e.target.checked)}
-                      label="Schedule 14 days instead of 7"
+                      label="7일 대신 14일로 예약하기"
                     />
                   </div>
                 )}

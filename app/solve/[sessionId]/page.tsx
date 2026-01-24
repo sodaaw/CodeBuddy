@@ -119,6 +119,7 @@ export default function SolvePage({ params }: SolvePageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const judgeResultRef = useRef<HTMLDivElement | null>(null)
 
   // 세션 로드 및 코드 초기화
   useEffect(() => {
@@ -180,6 +181,14 @@ export default function SolvePage({ params }: SolvePageProps) {
         judge: judgeResult,
         status: 'SUBMITTED',
       } : undefined)
+      
+      // 판정 결과로 스크롤
+      setTimeout(() => {
+        judgeResultRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }, 100)
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : '제출 중 오류가 발생했습니다.')
     } finally {
@@ -332,7 +341,7 @@ export default function SolvePage({ params }: SolvePageProps) {
 
           {/* Judge Result */}
           {session.judge && (
-            <Card>
+            <Card ref={judgeResultRef}>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <span className="text-xs font-medium text-text-secondary uppercase tracking-wide">

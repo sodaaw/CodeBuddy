@@ -165,12 +165,12 @@ export default function ReviewPage() {
             
             <Card className="text-center py-12">
               <p className="text-text-muted text-sm mb-6">
-                Nothing due today.
+                오늘 복습할 항목이 없어요.
               </p>
               <div className="flex flex-col items-center gap-3">
                 <Link href="/start">
                   <Button variant="primary" size="lg">
-                    Start a session
+                    세션 시작하기
                   </Button>
                 </Link>
                 {upcomingSessions.length > 0 && (
@@ -179,7 +179,7 @@ export default function ReviewPage() {
                     onClick={() => setShowListView(true)}
                     className="text-sm text-text-muted hover:text-text-primary transition-colors"
                   >
-                    View queue
+                    대기 목록 보기
                   </button>
                 )}
               </div>
@@ -188,7 +188,7 @@ export default function ReviewPage() {
             {upcomingSessions.length > 0 && (
               <div className="mt-8">
                 <h2 className="text-lg font-medium text-text-primary mb-4">
-                  Upcoming
+                  예정된 복습
                 </h2>
                 <div className="space-y-3">
                   {upcomingSessions.slice(0, showAllUpcoming ? undefined : 3).map((session) => (
@@ -215,7 +215,7 @@ export default function ReviewPage() {
                     onClick={() => setShowAllUpcoming(true)}
                     className="text-xs text-text-muted hover:text-text-primary transition-colors mt-3"
                   >
-                    See all ({upcomingSessions.length} total)
+                    전체 보기 ({upcomingSessions.length}개)
                   </button>
                 )}
               </div>
@@ -326,7 +326,7 @@ export default function ReviewPage() {
               onClick={() => setShowListView(true)}
               className="text-sm text-text-muted hover:text-text-primary transition-colors mb-8"
             >
-              View queue
+              대기 목록 보기
             </button>
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function ReviewPage() {
               onClick={() => setShowListView(false)}
               className="text-sm text-text-muted hover:text-text-primary transition-colors"
             >
-              Back to workbench
+              작업대로 돌아가기
             </button>
           </div>
           
@@ -356,7 +356,7 @@ export default function ReviewPage() {
           {todaySessions.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-medium text-text-primary mb-4">
-                Today
+                오늘
               </h2>
               <div className="space-y-3">
                 {todaySessions.map((session) => (
@@ -384,7 +384,7 @@ export default function ReviewPage() {
           {upcomingSessions.length > 0 && (
             <div>
               <h2 className="text-lg font-medium text-text-primary mb-4">
-                Upcoming
+                예정된 복습
               </h2>
               <div className="space-y-3">
                 {(showAllUpcoming ? upcomingSessions : upcomingSessions.slice(0, 3)).map((session) => (
@@ -410,7 +410,7 @@ export default function ReviewPage() {
                     onClick={() => setShowAllUpcoming(true)}
                     className="text-xs text-text-muted hover:text-text-primary transition-colors text-center w-full py-2"
                   >
-                    See all ({upcomingSessions.length} total)
+                    전체 보기 ({upcomingSessions.length}개)
                   </button>
                 )}
               </div>

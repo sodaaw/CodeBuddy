@@ -60,7 +60,8 @@ export default function HomePage() {
     }
     return {
       type: 'start' as const,
-      title: '오늘은 세션 하나만 열자',
+      title: '오늘의 첫 기록을 남겨볼까요?',
+      subtitle: '문제 하나만 기록해도 다음 복습 타이밍을 잡아드려요.',
       cta: '세션 시작하기',
       href: '/start',
       session: null,
@@ -81,6 +82,11 @@ export default function HomePage() {
                 >
                   {primaryAction.title}
                 </h1>
+                {primaryAction.type === 'start' && 'subtitle' in primaryAction && (
+                  <p className="text-base text-text-muted mb-4">
+                    {primaryAction.subtitle}
+                  </p>
+                )}
                 {primaryAction.session && (
                   <div className="mt-4 pb-4">
                     <div className="flex items-start justify-between gap-4">
@@ -125,7 +131,13 @@ export default function HomePage() {
                       {primaryAction.cta}
                     </Button>
                   </Link>
-                  {primaryAction.type !== 'start' && (
+                  {primaryAction.type === 'start' ? (
+                    <Link href="/" className="flex-1 sm:flex-initial">
+                      <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                        사용 방법
+                      </Button>
+                    </Link>
+                  ) : (
                     <Link href="/start" className="flex-1 sm:flex-initial">
                       <Button variant="secondary" size="lg" className="w-full sm:w-auto">
                         새 세션 시작
@@ -136,6 +148,94 @@ export default function HomePage() {
               </div>
             </Card>
           </div>
+
+          {/* Empty State 보강 섹션 */}
+          {primaryAction.type === 'start' && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 md:mb-12">
+                <Card>
+                  <div className="space-y-3">
+                    <h3 className="text-base font-medium text-text-primary">
+                      빠른 기록
+                    </h3>
+                    <p className="text-sm text-text-muted leading-relaxed">
+                      문제를 풀고 풀이를 기록하면 복습 일정이 자동으로 잡혀요.
+                    </p>
+                    <Link href="/start">
+                      <Button variant="secondary" size="md" className="w-full sm:w-auto">
+                        바로 기록
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+
+                <Card>
+                  <div className="space-y-3">
+                    <h3 className="text-base font-medium text-text-primary">
+                      복습
+                    </h3>
+                    <p className="text-sm text-text-muted leading-relaxed">
+                      {dueReviews.length > 0 
+                        ? `복습할 문제 ${dueReviews.length}개가 있어요.`
+                        : '복습할 문제가 없어요.'}
+                    </p>
+                    <Link href="/review">
+                      <Button variant="secondary" size="md" className="w-full sm:w-auto">
+                        복습 흐름 보기
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              </div>
+
+              {/* 3-step 가이드 */}
+              <div className="mb-10 md:mb-12">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-accent-muted flex items-center justify-center">
+                      <span className="text-xs font-medium text-accent">1</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-text-primary mb-1">
+                        기록
+                      </h3>
+                      <p className="text-sm text-text-muted">
+                        문제를 풀고 풀이를 메모와 함께 기록하세요.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-accent-muted flex items-center justify-center">
+                      <span className="text-xs font-medium text-accent">2</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-text-primary mb-1">
+                        체크 질문
+                      </h3>
+                      <p className="text-sm text-text-muted">
+                        AI가 만든 질문으로 이해도를 확인하고 검증하세요.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-accent-muted flex items-center justify-center">
+                      <span className="text-xs font-medium text-accent">3</span>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-text-primary mb-1">
+                        복습
+                      </h3>
+                      <p className="text-sm text-text-muted">
+                        최적의 타이밍에 복습해 오래 기억하도록 돕습니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </ProtectedRoute>
