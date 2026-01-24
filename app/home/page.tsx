@@ -82,7 +82,7 @@ export default function HomePage() {
                   {primaryAction.title}
                 </h1>
                 {primaryAction.session && (
-                  <div className="mt-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                  <div className="mt-4 pb-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
@@ -118,31 +118,24 @@ export default function HomePage() {
                     </div>
                   </div>
                 )}
-                <div className="pt-2">
-                  <Link href={primaryAction.href}>
+                {/* CTA 영역 - 버튼 2개 */}
+                <div className="pt-6 flex flex-col sm:flex-row gap-3">
+                  <Link href={primaryAction.href} className="flex-1 sm:flex-initial">
                     <Button variant="primary" size="lg" className="w-full sm:w-auto">
                       {primaryAction.cta}
                     </Button>
                   </Link>
+                  {primaryAction.type !== 'start' && (
+                    <Link href="/start" className="flex-1 sm:flex-initial">
+                      <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                        새 세션 시작
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </Card>
           </div>
-
-          {/* Secondary: Start a session link (only when not the primary action) */}
-          {primaryAction.type !== 'start' && (
-            <div className="mb-8">
-              <Link 
-                href="/start"
-                className="text-sm text-text-secondary hover:text-text-primary transition-colors duration-150 inline-flex items-center gap-1.5"
-              >
-                세션 시작하기
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     </ProtectedRoute>

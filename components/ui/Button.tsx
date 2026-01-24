@@ -17,9 +17,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         'active:bg-accent-hover active:shadow-[0_0_0_1px_rgba(62,207,142,0.2),0_0_12px_rgba(62,207,142,0.1)]'
       ),
       secondary: cn(
-        'bg-background-secondary border border-border text-text-primary rounded-[10px]',
-        'hover:bg-[#1f1f1f] hover:border-[rgba(255,255,255,0.14)]',
-        'active:bg-background-secondary active:border-border'
+        'bg-transparent border border-[rgba(255,255,255,0.08)] text-text-primary rounded-[10px]',
+        'hover:border-[rgba(255,255,255,0.14)] hover:text-text-primary',
+        'active:border-[rgba(255,255,255,0.12)]',
+        'transition-colors duration-150 ease-out'
       ),
       ghost: cn(
         'text-text-secondary rounded-[8px]',
