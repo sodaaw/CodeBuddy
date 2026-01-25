@@ -4,7 +4,6 @@ import { useAuth } from '@/lib/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
 import { Drawer } from '@/components/ui/Drawer'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
@@ -79,6 +78,36 @@ function scrollToSection(id: string, onAfter?: () => void) {
     }
   }
   onAfter?.()
+}
+
+function FeatureCard({
+  icon,
+  title,
+  description,
+  mock,
+}: {
+  icon: React.ReactNode
+  title: string
+  description: string
+  mock?: React.ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'group rounded-xl border border-[rgba(255,255,255,0.06)] bg-background-secondary/50 p-4 md:p-5',
+        'transition-all duration-200 ease-out',
+        'hover:border-[rgba(255,255,255,0.1)] hover:bg-background-secondary/80',
+        'hover:shadow-[0_0_0_1px_rgba(255,255,255,0.04)]'
+      )}
+    >
+      <div className="w-8 h-8 rounded-lg bg-accent-muted/60 flex items-center justify-center flex-shrink-0 mb-3 text-accent/90">
+        {icon}
+      </div>
+      <h3 className="text-base font-medium text-text-primary mb-1.5">{title}</h3>
+      <p className="text-sm text-text-muted leading-relaxed">{description}</p>
+      {mock}
+    </div>
+  )
 }
 
 const FAQ_ITEMS: { q: string; a: string }[] = [
@@ -277,70 +306,80 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* #features */}
+      {/* #features — capability overview (Supabase-style) */}
       <section
         id="features"
         className="max-w-6xl mx-auto px-4 py-16 md:py-20 border-t border-[rgba(255,255,255,0.06)] scroll-mt-16"
       >
-        <div className="text-center mb-10 md:mb-12">
-          <h2
-            className="text-2xl md:text-3xl font-semibold text-text-primary mb-2"
-            style={{ letterSpacing: '-0.02em', fontWeight: 600 }}
-          >
-            기능
-          </h2>
-          <p className="text-text-muted text-sm md:text-base max-w-2xl mx-auto">
-            풀이 기록부터 복습까지, 한 곳에서 관리하세요.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          <Card className="rounded-[12px]">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-5 max-w-4xl mx-auto">
+          <FeatureCard
+            icon={
+              <svg className="w-4 h-4 text-accent/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            }
+            title="세션 기록"
+            description="문제를 풀고, 핵심만 남깁니다."
+            mock={
+              <div className="flex flex-col gap-1.5 mt-3">
+                <div className="h-1.5 w-full max-w-[85%] rounded bg-[rgba(255,255,255,0.06)]" />
+                <div className="h-1.5 w-full max-w-[70%] rounded bg-[rgba(255,255,255,0.05)]" />
+                <div className="h-1.5 w-12 rounded bg-accent/10" />
               </div>
-              <div>
-                <h3 className="text-base font-medium text-text-primary mb-1.5">세션 기록</h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  풀었던 문제를 세션 단위로 기록해요. 메모와 함께 남기면 나중에 복습할 때 무슨 생각으로 풀었는지 다시 떠올리기 쉽습니다.
-                </p>
+            }
+          />
+          <FeatureCard
+            icon={
+              <svg className="w-4 h-4 text-accent/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+            }
+            title="이해도 질문"
+            description="설명할 수 있는지로 진짜 이해를 확인해요."
+            mock={
+              <div className="flex flex-col gap-2 mt-3">
+                <div className="h-2 w-full rounded bg-[rgba(255,255,255,0.06)]" />
+                <div className="flex gap-1.5">
+                  <div className="h-1.5 flex-1 rounded bg-[rgba(255,255,255,0.05)]" />
+                  <div className="h-1.5 w-8 rounded bg-accent/15" />
+                </div>
               </div>
-            </div>
-          </Card>
-
-          <Card className="rounded-[12px]">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
+            }
+          />
+          <FeatureCard
+            icon={
+              <svg className="w-4 h-4 text-accent/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            }
+            title="지연 복습 큐"
+            description="오늘 할 복습은 하나만 보여줘요."
+            mock={
+              <div className="flex flex-col gap-1.5 mt-3">
+                <div className="h-2 w-full rounded bg-accent/12 border border-accent/20" />
+                <div className="h-1.5 w-full max-w-[90%] rounded bg-[rgba(255,255,255,0.04)]" />
+                <div className="h-1.5 w-full max-w-[80%] rounded bg-[rgba(255,255,255,0.04)]" />
               </div>
-              <div>
-                <h3 className="text-base font-medium text-text-primary mb-1.5">이해도 질문 3문항</h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  AI가 만든 이해도 확인 질문 3개에 답해요. 문제만 기억하는 게 아니라 풀이를 제대로 이해했는지 검증합니다.
-                </p>
+            }
+          />
+          <FeatureCard
+            icon={
+              <svg className="w-4 h-4 text-accent/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            title="워크벤치 모드"
+            description="지금 해야 할 것에만 집중합니다."
+            mock={
+              <div className="flex gap-2 mt-3">
+                <div className="h-8 w-8 rounded-lg bg-[rgba(255,255,255,0.06)] flex-shrink-0" />
+                <div className="flex-1 flex flex-col gap-1.5 justify-center">
+                  <div className="h-1.5 w-full max-w-[75%] rounded bg-[rgba(255,255,255,0.06)]" />
+                  <div className="h-1.5 w-16 rounded bg-[rgba(255,255,255,0.04)]" />
+                </div>
               </div>
-            </div>
-          </Card>
-
-          <Card className="rounded-[12px]">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent-muted flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-medium text-text-primary mb-1.5">복습 큐 / 워크벤치</h3>
-                <p className="text-sm text-text-muted leading-relaxed">
-                  복습할 문제를 큐로 모아두고, 워크벤치에서 한 건씩 처리해요. 타이밍이 된 것부터 안내합니다.
-                </p>
-              </div>
-            </div>
-          </Card>
+            }
+          />
         </div>
       </section>
 
