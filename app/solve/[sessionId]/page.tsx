@@ -671,6 +671,46 @@ export default function SolvePage({ params }: SolvePageProps) {
                       </div>
                     )}
 
+                    {/* Test Cases */}
+                    {session.problem.testCases && session.problem.testCases.length > 0 && (
+                      <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
+                        <h3 className="text-sm font-medium text-text-primary mb-3">
+                          테스트 케이스
+                        </h3>
+                        <div className="space-y-3">
+                          {session.problem.testCases.map((testCase, idx) => (
+                            <div
+                              key={testCase.testCaseId || idx}
+                              className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-background-secondary/50 p-3 space-y-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-secondary">
+                                  테스트 케이스 {testCase.testCaseId || idx + 1}
+                                </span>
+                                {testCase.isHidden && (
+                                  <Badge variant="muted" className="text-[10px] py-0 px-1.5 h-4">
+                                    숨김
+                                  </Badge>
+                                )}
+                              </div>
+                              <div>
+                                <div className="text-xs font-medium text-text-secondary mb-1">입력</div>
+                                <pre className="text-xs text-text-muted font-mono whitespace-pre-wrap bg-background-tertiary p-2 rounded border border-[rgba(255,255,255,0.04)]">
+                                  {testCase.input || '(없음)'}
+                                </pre>
+                              </div>
+                              <div>
+                                <div className="text-xs font-medium text-text-secondary mb-1">예상 출력</div>
+                                <pre className="text-xs text-text-muted font-mono whitespace-pre-wrap bg-background-tertiary p-2 rounded border border-[rgba(255,255,255,0.04)]">
+                                  {testCase.expectedOutput}
+                                </pre>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* 힌트 섹션 */}
                     <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
                       <div className="flex items-center justify-between mb-2">
