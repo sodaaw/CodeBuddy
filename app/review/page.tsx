@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -104,7 +104,7 @@ function getStatusLine(session: Session): string {
   return '아직 제출 없음'
 }
 
-export default function ReviewPage() {
+function ReviewPageContent() {
   const searchParams = useSearchParams()
   const isDevMode = searchParams?.get('dev') === 'true'
   
@@ -581,5 +581,25 @@ export default function ReviewPage() {
         </div>
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function ReviewPage() {
+  return (
+    <Suspense fallback={
+      <ProtectedRoute>
+        <div className="min-h-screen pb-20 md:pb-0">
+          <div className="max-w-4xl mx-auto px-4 py-6 md:py-12">
+            <div className="mb-8 md:mb-10">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary mb-2" style={{ letterSpacing: '-0.02em', fontWeight: 600 }}>
+                복습
+              </h1>
+            </div>
+          </div>
+        </div>
+      </ProtectedRoute>
+    }>
+      <ReviewPageContent />
+    </Suspense>
   )
 }
