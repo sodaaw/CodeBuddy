@@ -40,12 +40,15 @@ export default function HomePage() {
   // Determine primary action
   const primaryAction = useMemo(() => {
     if (dueReviews.length > 0) {
+      const session = dueReviews[0]
       return {
         type: 'review' as const,
         title: '지금 복습할 시간이에요',
         cta: '지금 복습하기',
-        href: '/review',
-        session: dueReviews[0],
+        // 복습 버튼 클릭 시 회상/이해도 작성 화면이 아닌
+        // 바로 문제 풀이 화면으로 이동하도록 solve 세션으로 연결
+        href: `/solve/${session.id}`,
+        session,
       }
     }
     if (unfinishedSessions.length > 0) {
