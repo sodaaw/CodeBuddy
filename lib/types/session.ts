@@ -1,3 +1,10 @@
+export type TestCase = {
+  testCaseId: number
+  input: string
+  expectedOutput: string
+  isHidden: boolean
+}
+
 export type Problem = {
   id: string
   title: string
@@ -7,6 +14,9 @@ export type Problem = {
   url?: string
   statement?: string
   constraints?: string
+  testCases?: TestCase[]
+  timeLimitMs?: number
+  memoryLimitMb?: number
 }
 
 export type JudgeResult = {

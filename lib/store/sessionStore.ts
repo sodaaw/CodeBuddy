@@ -41,7 +41,7 @@ export const useSessionStore = create<SessionStore>()(
           createdAt: now,
           updatedAt: now,
           problem,
-          language: "javascript",
+          language: "python",
           code: "",
           status: "DRAFT",
         }
