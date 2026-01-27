@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import { createJudgeClient, validateJudgeResponse } from '@/lib/judge/client'
 import { QuickLogModal } from '@/components/log/QuickLogModal'
 import { normalizeN8nResponse, type NormalizedN8nResponse } from '@/lib/utils/n8nResponse'
+import { getHints } from '@/lib/api'
 
 // 웹훅 URL
 const WEBHOOK_URL = 'https://primary-production-b57a.up.railway.app/webhook/submit'
@@ -33,22 +34,10 @@ type N8nPayload = {
 // Monaco Editor를 동적으로 로드 (SSR 방지)
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
-type SubmitStage = "idle" | "sending" | "grading" | "generating" | "rendering" | "success" | "error"
-
 interface SolvePageProps {
   params: {
     sessionId: string
   }
-}
-
-const STAGE_MESSAGES: Record<SubmitStage, string> = {
-  idle: "Submit",
-  sending: "제출 데이터 전송 중…",
-  grading: "서버에서 채점하는 중…",
-  generating: "피드백 생성 중…",
-  rendering: "결과 불러오는 중…",
-  success: "완료!",
-  error: "전송 실패. 다시 시도해주세요.",
 }
 
 function getPlatformColor(platform: string): string {
@@ -174,9 +163,8 @@ export default function SolvePage({ params }: SolvePageProps) {
   const [showQuickLog, setShowQuickLog] = useState(false)
   const [session, setSession] = useState<Session | undefined>(undefined)
   const [code, setCodeLocal] = useState('')
-  const [submitStatus, setSubmitStatus] = useState<SubmitStage>("idle")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const stageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [hasSubmitted, setHasSubmitted] = useState(false)
   const [submittedCode, setSubmittedCode] = useState<string>('')
   const [showProblemPanel, setShowProblemPanel] = useState(false)
@@ -197,6 +185,7 @@ export default function SolvePage({ params }: SolvePageProps) {
   const [hintUsed, setHintUsed] = useState(false)
   const [showHint, setShowHint] = useState(false)
   const [showHintConfirm, setShowHintConfirm] = useState(false)
+  const [hints, setHints] = useState<string[]>([])
 
   // 체감 난이도 상태
   const [selfReportDifficulty, setSelfReportDifficulty] = useState(3)
@@ -204,6 +193,24 @@ export default function SolvePage({ params }: SolvePageProps) {
   // n8n 웹훅 응답 상태
   const [n8nResponse, setN8nResponse] = useState<NormalizedN8nResponse | null>(null)
   const [n8nError, setN8nError] = useState<string | null>(null)
+
+  // 중복 제거된 테스트 케이스: input과 expectedOutput이 같은 테스트 케이스는 하나만 표시
+  const uniqueTestCases = useMemo(() => {
+    if (!session?.problem.testCases) return []
+    
+    const seen = new Set<string>()
+    const unique: typeof session.problem.testCases = []
+    
+    for (const testCase of session.problem.testCases) {
+      const key = `${testCase.input || ''}|${testCase.expectedOutput || ''}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        unique.push(testCase)
+      }
+    }
+    
+    return unique
+  }, [session?.problem.testCases])
 
   // 시간 측정 타이머
   useEffect(() => {
@@ -281,11 +288,13 @@ export default function SolvePage({ params }: SolvePageProps) {
       setHintUsed(false)
       setShowHint(false)
       setShowHintConfirm(false)
+      setHints([])
       setSelfReportDifficulty(3)
       setN8nResponse(null)
       setN8nError(null)
       setHasSubmitted(false)
       setSubmittedCode('')
+      setIsSubmitting(false)
     }
 
     // 이미 초기화되었으면 스킵
@@ -364,6 +373,13 @@ export default function SolvePage({ params }: SolvePageProps) {
       setSession(loadedSession)
       setCodeLocal(loadedSession.code || '')
     }
+
+    // 힌트 로드
+    if (loadedSession.problem.id) {
+      getHints(loadedSession.problem.id).then(setHints).catch(() => {
+        setHints([])
+      })
+    }
   }, [params.sessionId]) // getSession, updateSession은 의존성에서 제거
 
   // 코드 변경 시 debounced 저장
@@ -398,45 +414,6 @@ export default function SolvePage({ params }: SolvePageProps) {
     setSession((prev) => prev ? { ...prev, language: newLanguage } : undefined)
   }
 
-  // 단계별 진행 타이머 관리
-  const startStageTimer = useCallback(() => {
-    // 기존 타이머 정리
-    if (stageTimerRef.current) {
-      clearTimeout(stageTimerRef.current)
-    }
-
-    const advanceStage = () => {
-      setSubmitStatus((current) => {
-        // 이미 완료되었거나 에러 상태면 진행하지 않음
-        if (current === "success" || current === "error" || current === "idle") {
-          return current
-        }
-
-        // 단계별 순환: sending -> grading -> generating -> grading (반복)
-        if (current === "sending") {
-          return "grading"
-        } else if (current === "grading") {
-          return "generating"
-        } else if (current === "generating") {
-          return "grading" // grading과 generating 사이를 반복
-        }
-        return current
-      })
-
-      // 다음 단계로 진행 (1.2초마다)
-      stageTimerRef.current = setTimeout(advanceStage, 1200)
-    }
-
-    // 첫 번째 단계 시작
-    stageTimerRef.current = setTimeout(advanceStage, 1200)
-  }, [])
-
-  const clearStageTimer = useCallback(() => {
-    if (stageTimerRef.current) {
-      clearTimeout(stageTimerRef.current)
-      stageTimerRef.current = null
-    }
-  }, [])
 
   // n8n 페이로드 빌드 및 전송
   const sendToN8n = async (session: Session, code: string) => {
@@ -464,6 +441,9 @@ export default function SolvePage({ params }: SolvePageProps) {
     }
 
     try {
+      // 디버깅: 요청 페이로드 로그
+      console.log('n8n으로 전송하는 페이로드:', JSON.stringify(payload, null, 2))
+      
       // 먼저 직접 웹훅 호출 시도
       let response = await fetch(WEBHOOK_URL, {
         method: 'POST',
@@ -473,16 +453,35 @@ export default function SolvePage({ params }: SolvePageProps) {
         body: JSON.stringify(payload),
       })
 
+      // 디버깅: 응답 헤더 확인
+      console.log('n8n 응답 상태:', response.status, response.statusText)
+      console.log('n8n 응답 헤더:', Object.fromEntries(response.headers.entries()))
+
       // CORS 에러가 발생하면 API 라우트를 통해 재시도
       if (!response.ok) {
         const errorText = await response.text()
+        console.error('n8n 응답 에러:', response.status, errorText)
         throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+
+      // n8n이 204(No Content) 또는 빈 body로 성공을 반환하는 경우가 있어 허용
+      if (response.status === 204) {
+        setN8nResponse(null)
+        console.log('n8n으로 전송 성공(204 No Content):', payload)
+        return
       }
 
       // 응답 본문 확인
       const responseText = await response.text()
+      console.log('n8n 응답 본문 길이:', responseText.length)
+      console.log('n8n 응답 본문 (처음 500자):', responseText.substring(0, 500))
+      
       if (!responseText || responseText.trim() === '') {
-        throw new Error('서버에서 빈 응답을 받았습니다.')
+        setN8nResponse(null)
+        console.warn('⚠️ n8n 응답이 비어있습니다(OK). status=', response.status)
+        console.warn('⚠️ n8n 워크플로우가 응답을 제대로 반환하지 않는 것 같습니다. 워크플로우의 "Respond to Webhook" 노드를 확인해주세요.')
+        setN8nError('n8n 서버가 빈 응답을 반환했습니다. 워크플로우 설정을 확인해주세요.')
+        return
       }
 
       let data
@@ -514,10 +513,17 @@ export default function SolvePage({ params }: SolvePageProps) {
             throw new Error(`HTTP ${proxyResponse.status}: ${errorText}`)
           }
 
+          // 프록시도 204/빈 body를 성공으로 취급
+          if (proxyResponse.status === 204) {
+            setN8nResponse(null)
+            return
+          }
+
           // 응답 본문 확인
           const proxyResponseText = await proxyResponse.text()
           if (!proxyResponseText || proxyResponseText.trim() === '') {
-            throw new Error('서버에서 빈 응답을 받았습니다.')
+            setN8nResponse(null)
+            return
           }
 
           let data
@@ -544,27 +550,18 @@ export default function SolvePage({ params }: SolvePageProps) {
   // Submit 버튼
   const handleSubmit = async () => {
     if (!session) return
-    if (submitStatus !== "idle") return // 이미 제출 중이면 무시
+    if (isSubmitting) return // 이미 제출 중이면 무시
 
-    setSubmitStatus("sending")
+    setIsSubmitting(true)
     setSubmitError(null)
     setN8nError(null)
     setN8nResponse(null)
-    clearStageTimer()
-    startStageTimer()
 
     try {
       // n8n으로 데이터 전송
       await sendToN8n(session, code)
-
-      // 전송 완료 후 채점 단계로
-      setSubmitStatus("grading")
       
       const judgeResult = await submitToJudge(session)
-      
-      // 채점 완료 후 렌더링 단계로
-      setSubmitStatus("rendering")
-      clearStageTimer()
       
       setJudgeResult(session.id, judgeResult)
       updateSession(session.id, { status: 'SUBMITTED' })
@@ -575,17 +572,9 @@ export default function SolvePage({ params }: SolvePageProps) {
       }
       setSession(updatedSession)
       
-      // 성공 상태로 전환
-      setSubmitStatus("success")
-      
       // 제출 완료 상태 저장
       setHasSubmitted(true)
       setSubmittedCode(code.trim())
-      
-      // 1초 후 idle로 복귀
-      setTimeout(() => {
-        setSubmitStatus("idle")
-      }, 1000)
 
       // 판정 결과로 스크롤
       setTimeout(() => {
@@ -595,14 +584,9 @@ export default function SolvePage({ params }: SolvePageProps) {
         })
       }, 100)
     } catch (error) {
-      clearStageTimer()
-      setSubmitStatus("error")
       setSubmitError(error instanceof Error ? error.message : '제출 중 오류가 발생했습니다.')
-      
-      // 3초 후 idle로 복귀
-      setTimeout(() => {
-        setSubmitStatus("idle")
-      }, 3000)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -623,9 +607,8 @@ export default function SolvePage({ params }: SolvePageProps) {
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current)
       }
-      clearStageTimer()
     }
-  }, [clearStageTimer])
+  }, [])
 
   // 세션이 없으면 빈 상태 표시
   if (!session) {
@@ -733,9 +716,9 @@ export default function SolvePage({ params }: SolvePageProps) {
           {/* Language Selector + Editor + Problem Panel */}
           <div className="flex flex-col md:flex-row gap-4">
             {/* Editor Column */}
-            <div className={cn('flex-1 min-w-0', showProblemPanel && 'md:w-[calc(100%-400px)]')}>
-              <Card className="p-0 overflow-hidden">
-                <div className="px-4 py-2 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3">
+            <div className={cn('flex-1 min-w-0 flex flex-col', showProblemPanel && 'md:w-[calc(100%-400px)]')}>
+              <Card className="p-0 overflow-hidden flex flex-col">
+                <div className="px-4 py-2 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between gap-3 flex-shrink-0">
                   <Select
                     value={session.language}
                     onChange={handleLanguageChange}
@@ -754,7 +737,7 @@ export default function SolvePage({ params }: SolvePageProps) {
                     {showProblemPanel ? '문제 숨기기' : '문제 보기'}
                   </Button>
                 </div>
-                <div className="h-[350px] md:h-[450px]">
+                <div className="h-[400px] md:h-[500px] w-full">
                   <MonacoEditor
                     language={monacoLanguage}
                     value={code}
@@ -772,6 +755,26 @@ export default function SolvePage({ params }: SolvePageProps) {
                   />
                 </div>
               </Card>
+              
+              {/* Submit Button - 항상 에디터 바로 아래 */}
+              <div className="mt-4">
+                <Button
+                  variant={hasSubmitted ? "secondary" : "primary"}
+                  size="md"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting || !code.trim()}
+                  className="w-full sm:w-auto"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      제출 중...
+                    </span>
+                  ) : (
+                    "Submit"
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Problem Panel - Desktop: Side panel, Mobile: Collapsible */}
@@ -834,13 +837,13 @@ export default function SolvePage({ params }: SolvePageProps) {
                     )}
 
                     {/* Test Cases */}
-                    {session.problem.testCases && session.problem.testCases.length > 0 && (
+                    {uniqueTestCases.length > 0 && (
                       <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
                         <h3 className="text-sm font-medium text-text-primary mb-3">
                           테스트 케이스
                         </h3>
                         <div className="space-y-3">
-                          {session.problem.testCases.map((testCase, idx) => (
+                          {uniqueTestCases.map((testCase, idx) => (
                             <div
                               key={testCase.testCaseId || idx}
                               className="rounded-lg border border-[rgba(255,255,255,0.06)] bg-background-secondary/50 p-3 space-y-2"
@@ -929,12 +932,19 @@ export default function SolvePage({ params }: SolvePageProps) {
                       )}
 
                       {/* 힌트 내용 */}
-                      {showHint && (
+                      {showHint && hints.length > 0 && (
+                        <div className="mt-2 p-3 rounded-[8px] bg-background-tertiary border border-[rgba(255,255,255,0.06)]">
+                          {hints.map((hint, index) => (
+                            <p key={index} className="text-sm text-text-muted leading-relaxed mb-2 last:mb-0">
+                              {hint}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {showHint && hints.length === 0 && (
                         <div className="mt-2 p-3 rounded-[8px] bg-background-tertiary border border-[rgba(255,255,255,0.06)]">
                           <p className="text-sm text-text-muted leading-relaxed">
-                            해시 테이블을 사용하면 O(n) 시간 복잡도로 해결할 수 있습니다. 
-                            각 숫자와 그 인덱스를 해시 맵에 저장하고, target - 현재 숫자가 
-                            해시 맵에 있는지 확인하면 됩니다.
+                            힌트를 불러오는 중...
                           </p>
                         </div>
                       )}
@@ -953,76 +963,6 @@ export default function SolvePage({ params }: SolvePageProps) {
                     </div>
                   </div>
                 </Card>
-              </div>
-            )}
-          </div>
-
-          {/* Submit Button and Status */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Button
-                variant={hasSubmitted ? "secondary" : "primary"}
-                size="md"
-                onClick={handleSubmit}
-                disabled={submitStatus !== "idle" || !code.trim()}
-                className="flex-1 sm:flex-initial"
-              >
-                {submitStatus === "idle" ? (
-                  "Submit"
-                ) : submitStatus === "success" ? (
-                  "완료!"
-                ) : submitStatus === "error" ? (
-                  "전송 실패"
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    {STAGE_MESSAGES[submitStatus]}
-                  </span>
-                )}
-              </Button>
-            </div>
-
-            {/* Status Indicator */}
-            {submitStatus !== "idle" && submitStatus !== "success" && submitStatus !== "error" && (
-              <div className="flex items-center gap-2 text-sm text-text-muted" aria-live="polite">
-                <span className="inline-block w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
-                <span>{STAGE_MESSAGES[submitStatus]}</span>
-              </div>
-            )}
-
-            {/* Progress Bar */}
-            {submitStatus !== "idle" && submitStatus !== "success" && submitStatus !== "error" && (
-              <div className="h-1 bg-background-tertiary rounded-full overflow-hidden">
-                <div className="h-full bg-accent/20 animate-pulse" style={{ width: '100%' }} />
-              </div>
-            )}
-
-            {/* Step Dots */}
-            {submitStatus !== "idle" && submitStatus !== "success" && submitStatus !== "error" && (
-              <div className="flex items-center justify-center gap-2">
-                {(["sending", "grading", "generating", "rendering"] as SubmitStage[]).map((stage, idx) => {
-                  const isActive = 
-                    (submitStatus === "sending" && idx === 0) ||
-                    ((submitStatus === "grading" || submitStatus === "generating") && (idx === 1 || idx === 2)) ||
-                    (submitStatus === "rendering" && idx === 3)
-                  const isPast = 
-                    (submitStatus === "grading" || submitStatus === "generating" || submitStatus === "rendering") && idx < 2 ||
-                    (submitStatus === "rendering" && idx < 3)
-
-                  return (
-                    <div
-                      key={stage}
-                      className={cn(
-                        "w-2 h-2 rounded-full transition-all duration-300",
-                        isActive
-                          ? "bg-accent scale-125"
-                          : isPast
-                          ? "bg-accent/50"
-                          : "bg-background-tertiary"
-                      )}
-                    />
-                  )
-                })}
               </div>
             )}
           </div>
@@ -1058,7 +998,18 @@ export default function SolvePage({ params }: SolvePageProps) {
 
           {n8nResponse && (
             <Card className="pb-6">
-              <h3 className="text-lg font-medium text-text-primary mb-4">채점 결과</h3>
+              <div className="mb-4">
+                <h3 className="text-lg font-medium text-text-primary mb-2">채점 결과</h3>
+                {/* 채점 결과가 실제 코드 실행 결과와 다를 수 있음을 알리는 경고 */}
+                {session?.runOutput && (
+                  <div className="p-3 rounded bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs text-blue-400">
+                      💡 참고: 채점 결과는 AI가 분석한 결과입니다. 실제 코드 실행 결과와 다를 수 있으니, 
+                      아래 "실제 코드 실행 결과" 섹션을 확인해주세요.
+                    </p>
+                  </div>
+                )}
+              </div>
               
               <div className="space-y-4">
                 {/* Summary Row - 결과, 이해도, 복습 일정 */}
@@ -1143,11 +1094,119 @@ export default function SolvePage({ params }: SolvePageProps) {
                   )}
                 </div>
 
+                {/* 실제 출력과 예상 출력 비교 */}
+                {(n8nResponse.actualOutput || n8nResponse.expectedOutput || session?.runOutput) && (
+                  <div className="p-4 rounded-[8px] bg-background-secondary border border-[rgba(255,255,255,0.06)]">
+                    <p className="text-xs font-medium text-text-secondary mb-3">실제 코드 실행 결과</p>
+                    <div className="space-y-3">
+                      {/* 실제 출력 */}
+                      {(session?.runOutput || n8nResponse.actualOutput) && (
+                        <div>
+                          <p className="text-xs font-medium text-text-secondary mb-1.5">실제 출력</p>
+                          <pre className="text-sm text-text-primary font-mono whitespace-pre-wrap bg-background-tertiary p-3 rounded border border-[rgba(255,255,255,0.04)]">
+                            {session?.runOutput || n8nResponse.actualOutput || '(없음)'}
+                          </pre>
+                        </div>
+                      )}
+                      {/* 예상 출력 */}
+                      {n8nResponse.expectedOutput && (
+                        <div>
+                          <p className="text-xs font-medium text-text-secondary mb-1.5">예상 출력</p>
+                          <pre className="text-sm text-text-primary font-mono whitespace-pre-wrap bg-background-tertiary p-3 rounded border border-[rgba(255,255,255,0.04)]">
+                            {n8nResponse.expectedOutput}
+                          </pre>
+                        </div>
+                      )}
+                      {/* 불일치 경고 */}
+                      {n8nResponse.actualOutput && n8nResponse.expectedOutput && 
+                       n8nResponse.actualOutput.trim() !== n8nResponse.expectedOutput.trim() && (
+                        <div className="p-3 rounded bg-yellow-500/10 border border-yellow-500/20">
+                          <p className="text-xs text-yellow-400">
+                            ⚠️ 실제 출력과 예상 출력이 일치하지 않습니다. 코드를 다시 확인해주세요.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 테스트 케이스 상세 정보 */}
+                {n8nResponse.testCaseDetails && n8nResponse.testCaseDetails.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-text-secondary">테스트 케이스 상세</p>
+                    {n8nResponse.testCaseDetails.map((tc, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          'p-3 rounded-[8px] border',
+                          tc.passed === false
+                            ? 'bg-red-500/5 border-red-500/20'
+                            : tc.passed === true
+                            ? 'bg-green-500/5 border-green-500/20'
+                            : 'bg-background-secondary border-[rgba(255,255,255,0.06)]'
+                        )}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-text-secondary">
+                            테스트 케이스 {idx + 1}
+                          </span>
+                          {tc.passed !== undefined && (
+                            <span
+                              className={cn(
+                                'text-xs font-semibold px-2 py-0.5 rounded',
+                                tc.passed
+                                  ? 'bg-green-500/20 text-green-400'
+                                  : 'bg-red-500/20 text-red-400'
+                              )}
+                            >
+                              {tc.passed ? '통과' : '실패'}
+                            </span>
+                          )}
+                        </div>
+                        {tc.input && (
+                          <div className="mb-2">
+                            <p className="text-xs text-text-muted mb-1">입력</p>
+                            <pre className="text-xs font-mono text-text-primary bg-background-tertiary p-2 rounded">
+                              {tc.input}
+                            </pre>
+                          </div>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {tc.expectedOutput && (
+                            <div>
+                              <p className="text-xs text-text-muted mb-1">예상 출력</p>
+                              <pre className="text-xs font-mono text-text-primary bg-background-tertiary p-2 rounded">
+                                {tc.expectedOutput}
+                              </pre>
+                            </div>
+                          )}
+                          {tc.actualOutput && (
+                            <div>
+                              <p className="text-xs text-text-muted mb-1">실제 출력</p>
+                              <pre className="text-xs font-mono text-text-primary bg-background-tertiary p-2 rounded">
+                                {tc.actualOutput}
+                              </pre>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* Hint Level 1 */}
                 {n8nResponse.hintLevel1 && (
                   <div className="p-4 rounded-[8px] bg-accent/10 border border-accent/20">
                     <p className="text-xs font-medium text-accent mb-2">힌트</p>
                     <p className="text-sm text-text-primary whitespace-pre-wrap">{n8nResponse.hintLevel1}</p>
+                    {/* 힌트가 실제 출력과 불일치할 수 있음을 알리는 경고 */}
+                    {session?.runOutput && n8nResponse.hintLevel1.includes(session.runOutput) === false && (
+                      <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-xs text-yellow-400">
+                          💡 참고: 위 힌트는 채점 시스템의 분석 결과입니다. 실제 코드 실행 결과와 다를 수 있습니다.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1162,6 +1221,15 @@ export default function SolvePage({ params }: SolvePageProps) {
                         </li>
                       ))}
                     </ol>
+                    {/* 추가 질문이 실제 출력과 불일치할 수 있음을 알리는 경고 */}
+                    {session?.runOutput && (
+                      <div className="mt-3 p-2 rounded bg-blue-500/10 border border-blue-500/20">
+                        <p className="text-xs text-blue-400">
+                          💡 참고: 위 질문들은 채점 시스템의 분석 결과를 바탕으로 생성되었습니다. 
+                          실제 코드 실행 결과({'"'}{session.runOutput.substring(0, 50)}{session.runOutput.length > 50 ? '...' : ''}{'"'})와 다를 수 있습니다.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
