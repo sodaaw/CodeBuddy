@@ -12,6 +12,14 @@ export interface NormalizedN8nResponse {
   reviewDays: number[]
   hintLevel1: string | null
   followupQuestions: string[]
+  actualOutput?: string | null
+  expectedOutput?: string | null
+  testCaseDetails?: Array<{
+    input?: string
+    expectedOutput?: string
+    actualOutput?: string
+    passed?: boolean
+  }>
 }
 
 /**
@@ -103,6 +111,24 @@ export function normalizeN8nResponse(raw: any): NormalizedN8nResponse {
     }
   }
 
+  // actualOutput, expectedOutput 정규화
+  const actualOutput = raw.actualOutput || raw.actual_output || raw.output || null
+  const expectedOutput = raw.expectedOutput || raw.expected_output || null
+  
+  // testCaseDetails 정규화
+  let testCaseDetails: NormalizedN8nResponse['testCaseDetails'] = undefined
+  if (raw.testCaseDetails || raw.test_case_details || raw.testCases || raw.test_cases) {
+    const details = raw.testCaseDetails || raw.test_case_details || raw.testCases || raw.test_cases
+    if (Array.isArray(details)) {
+      testCaseDetails = details.map((tc: any) => ({
+        input: tc.input || null,
+        expectedOutput: tc.expectedOutput || tc.expected_output || null,
+        actualOutput: tc.actualOutput || tc.actual_output || tc.output || null,
+        passed: tc.passed !== undefined ? Boolean(tc.passed) : undefined,
+      }))
+    }
+  }
+
   return {
     verdict: String(raw.verdict || ''),
     passed: Number(raw.passed) || 0,
@@ -112,5 +138,8 @@ export function normalizeN8nResponse(raw: any): NormalizedN8nResponse {
     reviewDays,
     hintLevel1,
     followupQuestions,
+    actualOutput: actualOutput ? String(actualOutput) : null,
+    expectedOutput: expectedOutput ? String(expectedOutput) : null,
+    testCaseDetails,
   }
 }
