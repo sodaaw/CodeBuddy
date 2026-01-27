@@ -112,7 +112,7 @@ function FeatureCard({
 
 const FAQ_ITEMS: { q: string; a: string }[] = [
   {
-    q: 'CodeBuddy는 뭔가요?',
+    q: 'AlgoMemory는 뭔가요?',
     a: '코딩 테스트 풀이를 기록하고, AI가 만든 이해도 질문으로 복습 타이밍을 잡아주는 서비스예요. 한 번 풀고 끝이 아니라, 오래 기억할 수 있도록 도와줍니다.',
   },
   {
@@ -196,8 +196,8 @@ export default function LandingPage() {
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
             >
-              <img src="/logobright.png" alt="CodeBuddy" className="h-6 w-6" />
-              <span className="text-lg font-medium text-text-primary">CodeBuddy</span>
+              <img src="/logobright.png" alt="AlgoMemory" className="h-6 w-6" />
+              <span className="text-lg font-medium text-text-primary">AlgoMemory</span>
             </button>
             <nav className="hidden sm:flex items-center gap-1">
               {[
@@ -254,7 +254,7 @@ export default function LandingPage() {
             오늘 설명할 수 있나요?
           </h1>
           <p className="text-lg sm:text-xl text-text-muted mb-8 md:mb-10 max-w-2xl mx-auto md:mx-0 leading-relaxed">
-            CodeBuddy는 한 번 풀고 잊히는 풀이가 아니라, 코딩 테스트에서 다시 꺼낼 수 있는 기억을 만들어줍니다.
+            AlgoMemory는 한 번 풀고 잊히는 풀이가 아니라, 코딩 테스트에서 다시 꺼낼 수 있는 기억을 만들어줍니다.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">

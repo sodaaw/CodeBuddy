@@ -91,7 +91,7 @@ export default function LoginPage() {
       <div className={cn('w-full', isSignUp ? 'max-w-lg' : 'max-w-md')}>
         <div className="mb-6 md:mb-8 text-center">
           <Link href="/" className="inline-block mb-4">
-            <span className="text-xl font-medium text-text-primary">CodeBuddy</span>
+            <span className="text-xl font-medium text-text-primary">AlgoMemory</span>
           </Link>
           <h1
             className="text-2xl font-medium text-text-primary mb-2"

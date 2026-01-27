@@ -17,10 +17,10 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
             <Link href="/home" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
               <img 
                 src="/logobright.png" 
-                alt="CodeBuddy" 
+                alt="AlgoMemory" 
                 className="h-6 w-6"
               />
-              <span className="text-lg font-medium text-text-primary">CodeBuddy</span>
+              <span className="text-lg font-medium text-text-primary">AlgoMemory</span>
             </Link>
             <TopNav />
           </div>

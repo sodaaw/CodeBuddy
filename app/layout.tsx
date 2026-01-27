@@ -12,7 +12,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'CodeBuddy',
+  title: 'AlgoMemory',
   description: 'Coding study assistant',
   icons: {
     icon: [
