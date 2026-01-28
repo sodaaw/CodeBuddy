@@ -165,6 +165,70 @@ const VERDICT_INFO: Record<string, VerdictInfo> = {
   },
 }
 
+// 추천 문제 데이터 타입
+type RecommendationData = {
+  problemId: number
+  recommendationId: number
+  recommendationReason: string
+}
+
+// 추천 문제 데이터 맵
+const RECOMMENDATION_DATA: Record<number, RecommendationData> = {
+  1000: { problemId: 1000, recommendationId: 1001, recommendationReason: '같은 입력 형식(두 정수)에서 연산만 바뀌는 기본기 강화(덧셈→뺄셈)' },
+  1001: { problemId: 1001, recommendationId: 10869, recommendationReason: '여러 연산을 한 번에 처리하면서 출력 형식/연산자 처리 기본기 확장' },
+  1008: { problemId: 1008, recommendationId: 10869, recommendationReason: '나눗셈 출력 이후, 사칙연산 전체를 다루며 정수/나눗셈 처리 습관 정리' },
+  2557: { problemId: 2557, recommendationId: 2438, recommendationReason: '입력 없는 단일 출력에서 입력/반복 출력(별찍기)로 자연스럽게 확장' },
+  2438: { problemId: 2438, recommendationId: 2439, recommendationReason: '같은 별찍기지만 정렬(공백) 로직이 추가되어 문자열 출력 제어 연습' },
+  2439: { problemId: 2439, recommendationId: 2741, recommendationReason: '패턴 출력 다음 단계로, 단순 반복 출력(1~N)로 루프 감각 고정' },
+  2739: { problemId: 2739, recommendationId: 2741, recommendationReason: '여러 줄 출력 경험을 유지한 채 더 단순한 반복 출력로 기본기 다지기' },
+  2741: { problemId: 2741, recommendationId: 2742, recommendationReason: '같은 반복 출력에서 방향(증가→감소)만 바꿔 루프 조건/인덱스 감각 강화' },
+  2742: { problemId: 2742, recommendationId: 2753, recommendationReason: '조건 분기 문제로 전환해 if/else와 나머지 연산을 함께 연습' },
+  2753: { problemId: 2753, recommendationId: 1110, recommendationReason: '조건+연산 다음 단계로 반복(while)과 사이클 탐지(종료조건) 연습' },
+  2884: { problemId: 2884, recommendationId: 2525, recommendationReason: '시간 계산 유형(시/분 변환, 올림/내림)을 동일 주제로 한 번 더 강화' },
+  10869: { problemId: 10869, recommendationId: 10998, recommendationReason: '사칙연산 후 곱셈만 단일로 빠르게 풀며 입출력/연산 실수 줄이기' },
+  10950: { problemId: 10950, recommendationId: 10951, recommendationReason: '테스트케이스 반복(T) 다음에 EOF 입력 처리로 입력 종료 조건을 확장' },
+  10951: { problemId: 10951, recommendationId: 10952, recommendationReason: 'EOF 처리 이후, 센티넬(0 0) 종료 조건 처리 방식 연습' },
+  10952: { problemId: 10952, recommendationId: 11021, recommendationReason: '반복 입력 + 출력 포맷(Case #)이 추가되어 서식 출력 습관 형성' },
+  10998: { problemId: 10998, recommendationId: 25314, recommendationReason: '단일 연산에서 문자열 패턴 출력로 전환해 반복 출력(문자열) 감각 확장' },
+  11021: { problemId: 11021, recommendationId: 11022, recommendationReason: 'Case 포맷을 더 엄밀하게(수식 포함) 다루며 출력 문자열 구성 연습' },
+  11022: { problemId: 11022, recommendationId: 10871, recommendationReason: '출력 포맷 문제 후, 조건 필터링(작은 수만 출력)으로 배열/조건 결합 연습' },
+  14681: { problemId: 14681, recommendationId: 1330, recommendationReason: '사분면 판단 후 비교 연산(>,<,==)을 단순하게 한 번 더 고정' },
+  2525: { problemId: 2525, recommendationId: 2884, recommendationReason: '같은 시간 계산 문제를 역으로 풀며 모듈러(24시간) 처리 감각 강화' },
+  25304: { problemId: 25304, recommendationId: 10818, recommendationReason: '누적 합 검증 후 배열 전체에서 min/max 찾기로 반복+비교 로직 확장' },
+  25314: { problemId: 25314, recommendationId: 15829, recommendationReason: '문자열 반복 출력에서 문자열을 수식으로 처리(해시)하는 단계로 확장' },
+  2562: { problemId: 2562, recommendationId: 10818, recommendationReason: '최댓값/인덱스 찾기 다음에 min/max 동시 처리로 일반화 연습' },
+  2577: { problemId: 2577, recommendationId: 3052, recommendationReason: '자리수 카운팅 후 모듈러/빈도 개념(서로 다른 나머지)로 확장' },
+  2675: { problemId: 2675, recommendationId: 2941, recommendationReason: '문자 반복 처리 후 특수 문자열 패턴(치환/카운트)로 문자열 실전 감각 강화' },
+  2908: { problemId: 2908, recommendationId: 1330, recommendationReason: '숫자 뒤집기 처리 후 결과 비교로 비교 연산/조건 출력 연결' },
+  2920: { problemId: 2920, recommendationId: 8958, recommendationReason: '패턴 판별(ascending/descending) 후 연속 점수 누적(OX)로 상태 누적 로직 연습' },
+  3052: { problemId: 3052, recommendationId: 2562, recommendationReason: '나머지의 중복 제거 감각 후 배열에서 최댓값/위치 찾기로 기본 반복/비교 강화' },
+  8958: { problemId: 8958, recommendationId: 4344, recommendationReason: '점수 누적 후 평균과 비율 계산(출력 포맷 포함)로 통계형 기본 문제 확장' },
+  9498: { problemId: 9498, recommendationId: 1330, recommendationReason: '등급 분기 후 비교 연산 문제로 조건/출력 최소 단위로 다시 정리' },
+  1065: { problemId: 1065, recommendationId: 2292, recommendationReason: '규칙 기반 카운팅 후 수열/구간 규칙(벌집)으로 수학적 규칙 찾기 확장' },
+  10818: { problemId: 10818, recommendationId: 2562, recommendationReason: 'min/max 처리 후 최댓값+인덱스(위치)까지 요구되어 구현 디테일 강화' },
+  10871: { problemId: 10871, recommendationId: 10818, recommendationReason: '필터링 출력 후 min/max로 배열 전반 처리(전체 스캔) 훈련' },
+  1110: { problemId: 1110, recommendationId: 1065, recommendationReason: '사이클 반복 후 규칙 판별(한수)로 반복+조건 결합 사고 확장' },
+  1152: { problemId: 1152, recommendationId: 1157, recommendationReason: '단어 수 세기 후 빈도 기반 최빈 문자 찾기로 문자열 통계 처리 확장' },
+  1157: { problemId: 1157, recommendationId: 1316, recommendationReason: '최빈 문자 후 그룹 단어 판별로 문자열 상태 추적(방문/연속성) 연습' },
+  11720: { problemId: 11720, recommendationId: 1065, recommendationReason: '자리수 합 처리 후 규칙 기반 카운팅(한수)로 수학적 조건 구현 확장' },
+  1316: { problemId: 1316, recommendationId: 2941, recommendationReason: '연속성 판별 후 다중 치환 패턴 처리로 문자열 예외 케이스 대응력 강화' },
+  1546: { problemId: 1546, recommendationId: 4344, recommendationReason: '평균 계산 후 평균 초과 비율 + 퍼센트 출력 포맷으로 한 단계 확장' },
+  1712: { problemId: 1712, recommendationId: 2292, recommendationReason: '공식 계산(손익분기점) 후 구간 규칙(벌집)으로 수학적 사고 확장' },
+  2292: { problemId: 2292, recommendationId: 1712, recommendationReason: '구간 규칙 문제 후 공식 기반 계산 문제로 전환해 수학 구현 균형 맞추기' },
+  2775: { problemId: 2775, recommendationId: 6064, recommendationReason: 'DP/누적 계산 감각 후 모듈러/주기 결합(중국인의 나머지류) 문제로 확장' },
+  2839: { problemId: 2839, recommendationId: 1712, recommendationReason: '그리디로 경우의 수 최소화 후 공식 계산 문제로 전환해 사고 다양화' },
+  2869: { problemId: 2869, recommendationId: 2292, recommendationReason: '등차 형태 계산 후 구간 규칙 문제로 확장해 수학적 패턴 인식 강화' },
+  2941: { problemId: 2941, recommendationId: 2675, recommendationReason: '치환/카운트 후 반복 출력 문제로 돌아가 문자열 기본기를 다시 고정' },
+  4344: { problemId: 4344, recommendationId: 1546, recommendationReason: '비율 출력 후 점수 조작 평균으로 다시 기본 평균 계산을 정밀하게 연습' },
+  5622: { problemId: 5622, recommendationId: 1152, recommendationReason: '다이얼 매핑 후 문자열 토큰화(단어 개수)로 문자열 처리 범위 확장' },
+  6064: { problemId: 6064, recommendationId: 9020, recommendationReason: '모듈러/주기 문제 후 소수 기반 분해(골드바흐)로 수학 주제 확장' },
+  9020: { problemId: 9020, recommendationId: 1712, recommendationReason: '소수 분해 사고 후 공식 계산 문제로 전환해 수학 구현 균형 잡기' },
+  11654: { problemId: 11654, recommendationId: 2675, recommendationReason: '아스키 변환 후 문자열 반복 출력로 문자/문자열 입출력 감각 확장' },
+  1193: { problemId: 1193, recommendationId: 2292, recommendationReason: '대각선 규칙(분수찾기) 후 구간 규칙(벌집)으로 패턴 수학 연속 학습' },
+  1330: { problemId: 1330, recommendationId: 9498, recommendationReason: '비교 연산 후 점수 구간 분기로 조건 분기 케이스를 확장' },
+  15829: { problemId: 15829, recommendationId: 1316, recommendationReason: '해시로 문자 처리 감각 후 그룹 단어로 연속/방문 상태 추적 실전 연습' },
+}
+
 async function submitToJudge(session: Session): Promise<JudgeResult> {
   const client = createJudgeClient()
 
@@ -1294,6 +1358,40 @@ export default function SolvePage({ params }: SolvePageProps) {
                     )}
                   </div>
                 )}
+
+                {/* 추천 문제 */}
+                {(() => {
+                  const currentProblemId = session?.problem.id ? parseInt(session.problem.id, 10) : null
+                  const recommendation = currentProblemId ? RECOMMENDATION_DATA[currentProblemId] : null
+                  
+                  if (recommendation) {
+                    return (
+                      <div className="pt-4 border-t border-[rgba(255,255,255,0.06)]">
+                        <p className="text-sm font-medium text-text-secondary mb-3">추천 문제</p>
+                        <div className="p-4 rounded-[8px] bg-background-secondary border border-[rgba(255,255,255,0.06)]">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center">
+                              <span className="text-xs font-semibold text-accent">
+                                {recommendation.recommendationId}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-sm font-semibold text-text-primary">
+                                  문제 {recommendation.recommendationId}
+                                </span>
+                              </div>
+                              <p className="text-sm text-text-muted leading-relaxed">
+                                {recommendation.recommendationReason}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
 
                 {/* 문제 기록하기 버튼 */}
                 <div className="pt-4 border-t border-[rgba(255,255,255,0.08)] flex justify-end">
